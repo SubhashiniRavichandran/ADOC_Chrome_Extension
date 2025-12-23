@@ -30,16 +30,18 @@
     dominant-baseline="central"
   >ADOC</text>
 
-  <!-- Quality indicator badge -->
-  <circle cx="96" cy="96" r="19.2" fill="white" />
+  
+  <!-- Quality indicator badge (only for 128px) -->
+  <circle cx="96" cy="96" r="19" fill="white" />
   <path
-    d="M 88.32 96
-       L 93.12 101.76
-       L 103.68 90.24"
+    d="M 88.4 96
+       L 94.1 101.7
+       L 103.6 90.3"
     stroke="#22c55e"
     stroke-width="4"
     stroke-linecap="round"
     stroke-linejoin="round"
     fill="none"
   />
+  
 </svg>
