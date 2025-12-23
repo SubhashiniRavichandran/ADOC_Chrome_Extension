@@ -1,0 +1,759 @@
+/**
+ * Content Script Styles
+ * Styles for sidebar injected into BI tool pages
+ */
+
+/* Sidebar Container */
+.adoc-sidebar {
+  position: fixed;
+  top: 0;
+  right: -400px;
+  width: 400px;
+  height: 100vh;
+  background: #ffffff;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+  z-index: 999999;
+  transition: right 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.adoc-sidebar.adoc-sidebar-open {
+  right: 0;
+}
+
+/* Header */
+.adoc-sidebar-header {
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.adoc-logo {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+.adoc-close-btn {
+  background: none;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.adoc-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Tabs */
+.adoc-tabs {
+  display: flex;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.adoc-tab {
+  flex: 1;
+  padding: 12px 8px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.adoc-tab:hover {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.adoc-tab.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+  background: #ffffff;
+}
+
+.adoc-tab svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Content Area */
+.adoc-sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+/* Loading State */
+.adoc-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: #64748b;
+}
+
+.adoc-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: adoc-spin 0.8s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes adoc-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error State */
+.adoc-error {
+  padding: 20px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #991b1b;
+}
+
+.adoc-error p {
+  margin: 0 0 8px 0;
+}
+
+.adoc-error-detail {
+  font-size: 13px;
+  color: #dc2626;
+}
+
+/* Empty State */
+.adoc-empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #94a3b8;
+}
+
+.adoc-empty-state svg {
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.adoc-empty-state h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  color: #64748b;
+}
+
+.adoc-empty-state p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.adoc-empty-state-small {
+  text-align: center;
+  padding: 20px;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+/* Sections */
+.adoc-section {
+  margin-bottom: 24px;
+}
+
+.adoc-section h3 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.adoc-section h4 {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.adoc-section:last-child {
+  margin-bottom: 0;
+}
+
+.adoc-info-text {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Search Box */
+.adoc-search-box {
+  margin-bottom: 12px;
+}
+
+.adoc-search-box input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.adoc-search-box input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+/* Report Overview */
+.adoc-report-name {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+.adoc-score-card {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.adoc-score-label {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.adoc-score-value {
+  font-size: 32px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.adoc-score-value.score-high,
+.score-high {
+  color: #22c55e;
+}
+
+.adoc-score-value.score-medium,
+.score-medium {
+  color: #eab308;
+}
+
+.adoc-score-value.score-low,
+.score-low {
+  color: #ef4444;
+}
+
+/* Alerts Section */
+.adoc-alerts-section {
+  background: #fef3c7;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid #f59e0b;
+}
+
+.adoc-alert-summary {
+  font-size: 13px;
+  color: #92400e;
+  margin-bottom: 12px;
+}
+
+/* Alert Filters */
+.adoc-alert-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.adoc-filter-btn {
+  padding: 6px 12px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #475569;
+}
+
+.adoc-filter-btn:hover {
+  background: #e2e8f0;
+}
+
+.adoc-filter-btn.active {
+  background: #667eea;
+  color: #ffffff;
+  border-color: #667eea;
+}
+
+/* Alert Cards */
+.adoc-alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.adoc-alert-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #667eea;
+  border-radius: 6px;
+  padding: 12px;
+  transition: all 0.2s;
+}
+
+.adoc-alert-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.adoc-alert-card[data-severity="CRITICAL"] {
+  border-left-color: #ef4444;
+  background: #fef2f2;
+}
+
+.adoc-alert-card[data-severity="HIGH"] {
+  border-left-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.adoc-alert-card[data-severity="MEDIUM"] {
+  border-left-color: #eab308;
+  background: #fefce8;
+}
+
+.adoc-alert-card[data-severity="LOW"] {
+  border-left-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.adoc-alert-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.adoc-alert-severity {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.adoc-alert-time {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.adoc-alert-title {
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.adoc-alert-description {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.adoc-alert-asset {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.adoc-alert-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* Assets List */
+.adoc-assets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.adoc-asset-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 12px;
+  transition: all 0.2s;
+}
+
+.adoc-asset-item:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.adoc-asset-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.adoc-asset-name {
+  font-weight: 500;
+  color: #1e293b;
+  font-size: 13px;
+}
+
+.adoc-asset-score {
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.adoc-asset-alerts {
+  font-size: 12px;
+  color: #f59e0b;
+  margin-bottom: 4px;
+}
+
+.adoc-asset-columns {
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* Lineage */
+.adoc-lineage-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.adoc-lineage-section h4 {
+  margin-bottom: 12px;
+}
+
+.adoc-lineage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.adoc-lineage-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.adoc-lineage-item:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.adoc-lineage-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.adoc-lineage-info {
+  flex: 1;
+}
+
+.adoc-lineage-name {
+  font-weight: 500;
+  color: #1e293b;
+  font-size: 13px;
+}
+
+.adoc-lineage-type {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.adoc-lineage-score {
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.adoc-lineage-current {
+  padding: 16px 0;
+  text-align: center;
+}
+
+.adoc-lineage-current-item {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  border-color: #667eea;
+}
+
+.adoc-lineage-current-item .adoc-lineage-name,
+.adoc-lineage-current-item .adoc-lineage-type {
+  color: #ffffff;
+}
+
+/* Columns List */
+.adoc-columns-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.adoc-column-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 10px;
+  transition: all 0.2s;
+}
+
+.adoc-column-item:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.adoc-column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.adoc-column-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  color: #1e293b;
+  font-size: 13px;
+}
+
+.adoc-column-icon {
+  font-size: 14px;
+}
+
+.adoc-column-score {
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.adoc-column-asset {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.adoc-column-issues {
+  font-size: 11px;
+  color: #f59e0b;
+}
+
+.adoc-column-ok {
+  font-size: 11px;
+  color: #22c55e;
+}
+
+/* Column Badges (Injected into PowerBI) */
+.adoc-column-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 4px;
+  cursor: help;
+}
+
+.adoc-badge-icon {
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* Column Tooltip */
+.adoc-column-tooltip {
+  background: #1e293b;
+  color: #ffffff;
+  padding: 12px;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  font-size: 12px;
+  max-width: 250px;
+  z-index: 1000000;
+}
+
+.adoc-tooltip-header {
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.adoc-tooltip-score {
+  margin-bottom: 6px;
+}
+
+.adoc-tooltip-issues {
+  color: #fbbf24;
+  margin-bottom: 6px;
+}
+
+.adoc-tooltip-ok {
+  color: #86efac;
+  margin-bottom: 6px;
+}
+
+.adoc-tooltip-asset {
+  font-size: 11px;
+  color: #cbd5e1;
+}
+
+/* Buttons */
+.adoc-btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  width: 100%;
+  font-family: inherit;
+}
+
+.adoc-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+}
+
+.adoc-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.adoc-btn-secondary {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.adoc-btn-secondary:hover {
+  background: #e2e8f0;
+}
+
+.adoc-btn-small {
+  padding: 6px 12px;
+  font-size: 12px;
+  width: auto;
+}
+
+/* Actions */
+.adoc-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* Footer */
+.adoc-footer {
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 12px;
+  color: #94a3b8;
+  text-align: center;
+}
+
+/* Context Info */
+.adoc-context-info {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 13px;
+}
+
+.adoc-context-info p {
+  margin: 4px 0;
+}
+
+.adoc-context-info strong {
+  color: #1e293b;
+}
+
+/* Scrollbar Styling */
+.adoc-sidebar-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.adoc-sidebar-content::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.adoc-sidebar-content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.adoc-sidebar-content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animations */
+@keyframes adoc-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.adoc-alert-card,
+.adoc-asset-item,
+.adoc-column-item {
+  animation: adoc-fade-in 0.3s ease;
+}

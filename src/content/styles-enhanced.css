@@ -1,0 +1,597 @@
+/**
+ * Enhanced Content Script Styles
+ * Complete styles for all sidebar components including tabs, lineage, and detailed alerts
+ */
+
+/* Base styles from styles.css */
+@import url('styles.css');
+
+/* Tab Navigation */
+.adoc-tabs {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.adoc-tabs-header {
+  display: flex;
+  border-bottom: 2px solid #e2e8f0;
+  background: #f8fafc;
+  flex-shrink: 0;
+}
+
+.adoc-tab-btn {
+  flex: 1;
+  padding: 12px 8px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+}
+
+.adoc-tab-btn:hover {
+  color: #475569;
+  background: #f1f5f9;
+}
+
+.adoc-tab-btn.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+  background: #ffffff;
+}
+
+.adoc-tab-icon {
+  font-size: 16px;
+}
+
+.adoc-tab-badge {
+  background: #ef4444;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.adoc-tab-btn.active .adoc-tab-badge {
+  background: #667eea;
+}
+
+.adoc-tabs-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.adoc-tab-panel {
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+
+.adoc-tab-panel.active {
+  display: block;
+}
+
+.adoc-tab-content-inner {
+  padding: 16px;
+}
+
+/* Lineage Visualization */
+.adoc-lineage-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.adoc-lineage-section {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.adoc-lineage-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.adoc-lineage-title svg {
+  color: #667eea;
+}
+
+.adoc-lineage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.adoc-lineage-asset {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 10px;
+  transition: all 0.2s;
+}
+
+.adoc-lineage-asset:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.adoc-lineage-asset.has-issues {
+  border-left: 3px solid #f59e0b;
+}
+
+.adoc-lineage-asset-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.adoc-lineage-asset-name {
+  font-weight: 500;
+  font-size: 13px;
+  color: #1e293b;
+}
+
+.adoc-lineage-asset-score {
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.adoc-lineage-asset-type {
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.adoc-lineage-asset-alert {
+  font-size: 11px;
+  color: #f59e0b;
+  margin-top: 4px;
+}
+
+.adoc-lineage-divider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0;
+}
+
+.adoc-lineage-arrow {
+  font-size: 24px;
+  color: #cbd5e1;
+}
+
+.adoc-lineage-current {
+  font-size: 12px;
+  font-weight: 600;
+  color: #667eea;
+  background: #f0f4ff;
+  padding: 6px 12px;
+  border-radius: 12px;
+}
+
+/* Detailed Alerts */
+.adoc-alerts-grouped {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.adoc-alert-group {
+  background: #f8fafc;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.adoc-alert-group-header {
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.adoc-alert-group-header.severity-critical {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.adoc-alert-group-header.severity-high {
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.adoc-alert-group-header.severity-medium {
+  background: #fefce8;
+  color: #854d0e;
+}
+
+.adoc-alert-group-header.severity-low {
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.adoc-alert-severity-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.adoc-alert-count {
+  background: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.adoc-alert-group-items {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.adoc-alert-item {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.adoc-alert-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+
+.adoc-alert-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: #1e293b;
+  flex: 1;
+}
+
+.adoc-alert-time {
+  font-size: 11px;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.adoc-alert-description {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.adoc-alert-assets {
+  font-size: 11px;
+  color: #475569;
+  background: #f8fafc;
+  padding: 6px 8px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+.adoc-alert-assets strong {
+  color: #1e293b;
+  margin-right: 4px;
+}
+
+.adoc-alert-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.adoc-alert-rule {
+  background: #fef2f2;
+  border-left: 3px solid #ef4444;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.adoc-rule-name {
+  font-weight: 600;
+  color: #991b1b;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.adoc-rule-value {
+  color: #dc2626;
+}
+
+.adoc-alert-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+/* Filter Controls */
+.adoc-filter-controls {
+  margin-bottom: 16px;
+}
+
+.adoc-search-bar {
+  margin-bottom: 12px;
+}
+
+.adoc-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.adoc-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.adoc-severity-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.adoc-filter-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.adoc-filter-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.adoc-filter-btn {
+  padding: 6px 12px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.adoc-filter-btn:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.adoc-filter-btn.active {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+/* Columns List */
+.adoc-columns-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.adoc-column-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.adoc-column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.adoc-column-name {
+  font-weight: 500;
+  font-size: 13px;
+  color: #1e293b;
+  font-family: 'Monaco', 'Courier New', monospace;
+}
+
+.adoc-column-score {
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.adoc-column-issues {
+  font-size: 11px;
+  color: #f59e0b;
+  margin-top: 4px;
+}
+
+/* Column Badges (injected into PowerBI) */
+.adoc-column-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  cursor: help;
+}
+
+.adoc-column-badge:hover {
+  transform: scale(1.2);
+  transition: transform 0.2s;
+}
+
+/* Small Buttons */
+.adoc-btn-small {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+}
+
+.adoc-btn-small.adoc-btn-secondary {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.adoc-btn-small.adoc-btn-secondary:hover {
+  background: #e2e8f0;
+}
+
+.adoc-btn-small.adoc-btn-link {
+  background: #f0f4ff;
+  color: #667eea;
+  border: 1px solid #c7d2fe;
+}
+
+.adoc-btn-small.adoc-btn-link:hover {
+  background: #e0e7ff;
+  border-color: #a5b4fc;
+}
+
+/* Page Name */
+.adoc-page-name {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+/* Empty Messages */
+.adoc-empty-message {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+  padding: 20px;
+  font-style: italic;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments for smaller sidebars */
+@media (max-width: 400px) {
+  .adoc-sidebar {
+    width: 100%;
+    right: -100%;
+  }
+
+  .adoc-tab-btn {
+    font-size: 11px;
+    padding: 10px 6px;
+  }
+
+  .adoc-tab-icon {
+    font-size: 14px;
+  }
+}
+
+/* Dark mode support (if enabled) */
+@media (prefers-color-scheme: dark) {
+  .adoc-sidebar {
+    background: #1e293b;
+    color: #e2e8f0;
+  }
+
+  .adoc-section {
+    border-color: #334155;
+  }
+
+  .adoc-asset-item,
+  .adoc-lineage-asset,
+  .adoc-alert-item,
+  .adoc-column-item {
+    background: #334155;
+    border-color: #475569;
+  }
+
+  .adoc-score-card,
+  .adoc-lineage-section,
+  .adoc-alert-group {
+    background: #334155;
+  }
+
+  .adoc-tabs-header {
+    background: #334155;
+    border-bottom-color: #475569;
+  }
+
+  .adoc-tab-btn {
+    color: #cbd5e1;
+  }
+
+  .adoc-tab-btn.active {
+    background: #1e293b;
+    color: #818cf8;
+    border-bottom-color: #818cf8;
+  }
+
+  .adoc-input {
+    background: #334155;
+    border-color: #475569;
+    color: #e2e8f0;
+  }
+
+  .adoc-filter-btn {
+    background: #334155;
+    border-color: #475569;
+    color: #cbd5e1;
+  }
+
+  .adoc-filter-btn.active {
+    background: #667eea;
+    color: white;
+  }
+}

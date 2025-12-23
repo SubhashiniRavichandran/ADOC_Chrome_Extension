@@ -1,0 +1,48 @@
+{
+  "name": "adoc-chrome-extension",
+  "version": "1.0.0",
+  "description": "Chrome extension that brings ADOC's data observability capabilities into Business Intelligence tools",
+  "author": "Acceldata Inc.",
+  "license": "UNLICENSED",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/acceldata/adoc-extension"
+  },
+  "keywords": [
+    "chrome-extension",
+    "data-observability",
+    "data-quality",
+    "powerbi",
+    "tableau",
+    "looker",
+    "business-intelligence",
+    "data-reliability"
+  ],
+  "scripts": {
+    "build": "echo 'No build step required - vanilla JavaScript'",
+    "package": "zip -r adoc-extension-v$npm_package_version.zip . -x '*.git*' -x 'node_modules/*' -x '*.DS_Store' -x '*.md' -x 'package.json'",
+    "lint": "echo 'Linting not configured'",
+    "test": "echo 'Tests not configured'"
+  },
+  "devDependencies": {},
+  "dependencies": {},
+  "engines": {
+    "chrome": ">=120.0.0"
+  },
+  "manifest": {
+    "version": "3",
+    "name": "ADOC Data Reliability for BI Tools",
+    "description": "View data reliability scores and alerts from ADOC directly in PowerBI, Tableau, and Looker"
+  },
+  "contributors": [
+    {
+      "name": "Nitin Motgi",
+      "email": "nitin.motgi@acceldata.io"
+    },
+    {
+      "name": "Ashok G",
+      "email": "ashok.gunasekaran@acceldata.io"
+    }
+  ]
+}

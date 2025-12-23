@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ADOC Extension Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="options-container">
+    <!-- Header -->
+    <header class="options-header">
+      <h1>ADOC Data Reliability Extension</h1>
+      <p class="subtitle">Configuration & Settings</p>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="options-nav">
+      <button class="nav-btn active" data-tab="connection">Connection</button>
+      <button class="nav-btn" data-tab="notifications">Notifications</button>
+      <button class="nav-btn" data-tab="display">Display</button>
+      <button class="nav-btn" data-tab="bi-tools">BI Tools</button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="options-main">
+      <!-- Connection Tab -->
+      <section id="connection-tab" class="tab-content active">
+        <h2>ADOC Connection</h2>
+        <p class="section-description">
+          Configure your ADOC credentials. You can generate API keys from ADOC Admin Central.
+        </p>
+
+        <form id="connection-form">
+          <div class="form-group">
+            <label for="base-url">ADOC Server URL</label>
+            <input
+              type="url"
+              id="base-url"
+              name="baseUrl"
+              placeholder="https://adoc.acceldata.io"
+              required
+            />
+            <span class="form-hint">The URL of your ADOC instance</span>
+          </div>
+
+          <div class="form-group">
+            <label for="access-key">API Access Key</label>
+            <input
+              type="text"
+              id="access-key"
+              name="accessKey"
+              placeholder="Enter your access key"
+              required
+            />
+            <span class="form-hint">Your ADOC API access key (public identifier)</span>
+          </div>
+
+          <div class="form-group">
+            <label for="secret-key">API Secret Key</label>
+            <input
+              type="password"
+              id="secret-key"
+              name="secretKey"
+              placeholder="Enter your secret key"
+              required
+            />
+            <span class="form-hint">Your ADOC API secret key (stored encrypted)</span>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" id="test-connection-btn" class="btn btn-secondary">
+              Test Connection
+            </button>
+            <button type="submit" class="btn btn-primary">
+              Save Credentials
+            </button>
+          </div>
+
+          <div id="connection-status" class="status-message" style="display: none;"></div>
+        </form>
+      </section>
+
+      <!-- Notifications Tab -->
+      <section id="notifications-tab" class="tab-content">
+        <h2>Notification Preferences</h2>
+        <p class="section-description">
+          Configure how and when you receive data quality alerts.
+        </p>
+
+        <form id="notifications-form">
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="enable-notifications" name="enabled" />
+              Enable browser notifications
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label for="severity-threshold">Alert Severity Threshold</label>
+            <select id="severity-threshold" name="severityThreshold">
+              <option value="LOW">Low - All alerts</option>
+              <option value="MEDIUM">Medium - Medium priority and above</option>
+              <option value="HIGH">High - High priority and above</option>
+              <option value="CRITICAL">Critical - Critical alerts only</option>
+            </select>
+            <span class="form-hint">Only show alerts at or above this severity level</span>
+          </div>
+
+          <div class="form-group">
+            <label for="notification-frequency">Notification Frequency</label>
+            <select id="notification-frequency" name="frequency">
+              <option value="REAL_TIME">Real-time - Immediate notifications</option>
+              <option value="HOURLY">Hourly - Summary every hour</option>
+              <option value="DAILY">Daily - Daily digest</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="notification-sound" name="sound" />
+              Play sound for notifications
+            </label>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+              Save Notification Settings
+            </button>
+          </div>
+
+          <div id="notifications-status" class="status-message" style="display: none;"></div>
+        </form>
+      </section>
+
+      <!-- Display Tab -->
+      <section id="display-tab" class="tab-content">
+        <h2>Display Settings</h2>
+        <p class="section-description">
+          Customize how data reliability information is displayed.
+        </p>
+
+        <form id="display-form">
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="show-sidebar-default" name="showSidebarByDefault" />
+              Show sidebar by default
+            </label>
+            <span class="form-hint">Automatically open the sidebar when loading BI tool pages</span>
+          </div>
+
+          <div class="form-group">
+            <label for="color-scheme">Color Scheme</label>
+            <select id="color-scheme" name="colorScheme">
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+              <option value="auto">Auto (match system)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="refresh-interval">Data Refresh Interval</label>
+            <select id="refresh-interval" name="refreshInterval">
+              <option value="1">1 minute</option>
+              <option value="5">5 minutes</option>
+              <option value="15">15 minutes</option>
+              <option value="30">30 minutes</option>
+            </select>
+            <span class="form-hint">How often to refresh data from ADOC</span>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+              Save Display Settings
+            </button>
+          </div>
+
+          <div id="display-status" class="status-message" style="display: none;"></div>
+        </form>
+      </section>
+
+      <!-- BI Tools Tab -->
+      <section id="bi-tools-tab" class="tab-content">
+        <h2>BI Tool Integration</h2>
+        <p class="section-description">
+          Enable or disable the extension for specific BI tools.
+        </p>
+
+        <form id="bi-tools-form">
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="enable-powerbi" name="powerbi" checked />
+              Enable for Power BI
+            </label>
+            <span class="form-hint">Phase 1 - Fully supported</span>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="enable-tableau" name="tableau" />
+              Enable for Tableau
+            </label>
+            <span class="form-hint">Phase 2 - Coming soon</span>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="enable-looker" name="looker" />
+              Enable for Looker
+            </label>
+            <span class="form-hint">Phase 3 - Coming soon</span>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+              Save BI Tool Settings
+            </button>
+          </div>
+
+          <div id="bi-tools-status" class="status-message" style="display: none;"></div>
+        </form>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="options-footer">
+      <p>ADOC Data Reliability Extension v1.0.0</p>
+      <p>
+        <a href="https://docs.acceldata.io" target="_blank">Documentation</a> |
+        <a href="https://support.acceldata.io" target="_blank">Support</a>
+      </p>
+    </footer>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

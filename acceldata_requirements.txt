@@ -1,0 +1,737 @@
+ADOC Chrome Extension: Data Reliability Sidebar for BI Tools High Level View
+The ADOC Chrome Extension is a lightweight Chrome browser add-on designed to enhance data reliability insights for users of popular Business Intelligence (BI) tools, including Power BI, Tableau, Looker, Omni, and others. By injecting a customizable right-side panel directly into the BI tool's browser interface, the extension allows users to access real-time data quality metrics—such as freshness, completeness, accuracy, and anomaly alerts—contextualized to the active report or dashboard. This "meet users where they are" approach integrates Acceldata's Data Observability Cloud (ADOC) seamlessly, reducing context-switching and empowering data consumers to validate insights without leaving their workflow. The extension leverages ADOC's public APIs for authentication and data retrieval, ensuring secure, credential-based access to reliability scores tied to specific datasets or pipelines.
+Key Features
+Contextual Detection – Automatically identifies the active BI tool and report (e.g., via URL parsing or DOM inspection) to fetch relevant ADOC reliability data. Right-Side Panel – A collapsible, non-intrusive sidebar displaying key metrics (e.g., data freshness score, drift alerts, lineage overview) with drill-down views. ADOC Integration – One-time login using user credentials; subsequent sessions use OAuth tokens for API calls to ADOC endpoints (e.g., /reliability/scores for report-specific queries). Customization – Users can pin/unpin the panel, configure metric priorities, and set alerts for threshold breaches. Critical User Journeys (CUJs)
+The user installs the extension from the Chrome Web Store, navigates to a Power BI report, clicks the extension icon, and logs in with ADOC credentials. The panel opens, auto-populates with reliability scores for the report's datasets. While viewing a Tableau dashboard, the user expands the sidebar to see a "freshness" alert on a key metric. They click to view root-cause details (e.g., pipeline delay), without refreshing the page. Justification and Value Proposition
+Data teams spend ~30% of their time troubleshooting reliability issues, often requiring switches between BI tools and observability platforms like ADOC, leading to delayed decisions and reduced trust in analytics. This extension addresses that by embedding ADOC's end-to-end observability (covering data-at-rest, in-motion, and in-consumption) directly in the BI workflow, enabling "shift-left" reliability checks that detect issues early (e.g., schema drift via ADOC policies).
+Technical Considerations
+Manifest V3 Chrome extension with content scripts for BI page injection, background script for API handling, and popup for settings. Use React for the sidebar UI. Rely on ADOC public endpoints; no custom backend needed. OAuth 2.0 for ADOC auth; store tokens encrypted via Chrome storage API. Ensure HTTPS-only for all calls; comply with BI tool policies (e.g., Tableau's sandboxed extensions). Graceful fallbacks for unsupported tools; offline mode shows cached metrics. Next Steps
+The primary goal is to build, secure, and deploy a production-ready MVP to the Chrome Web Store within 4-6 weeks. A third-party vendor alongside a services team led by Ashok will handle development, utilizing ADOC's provided public APIs and documentation.
+Meetings / AI - AD / Indium
+Sep 18, 2025
+AI (AD): APIs on searching asset, how to find asset information Discussion: After authentication, the tokens would be stored in-memory in workers. Discussion: The user is logged into the ADOC only once, the login expires based on the token provided from ADOC. AI (AD): Need a mock.fgsdtr AI (Indium): Power BI setup needs to be done AI (Indium): ADOC needs to connect to that Power BI Instance (Regular Crawl) Subha: In-Scope Deliverables
+	•	Chrome Extension Development (Manifest V3)
+	•	Content scripts for detecting BI tools (via URL parsing/DOM inspection).
+	•	Sidebar UI (React-based) injected into BI dashboards.
+	•	Background script for ADOC API handling.
+	•	Popup settings page for login and preferences.
+	•	ADOC API Integration
+	•	OAuth 2.0 authentication (user login flow).
+	•	Secure token storage via Chrome Storage API (encrypted).
+	•	API consumption from ADOC public endpoints (/reliability/scores, etc.).
+	•	Caching mechanism for offline fallback.
+	•	Sidebar Features
+	•	Collapsible right-side panel.
+	•	Display of key reliability metrics: freshness, completeness, drift alerts, lineage overview.
+	•	Drill-down navigation for anomaly details.
+	•	User customization: pin/unpin panel, prioritize metrics, set alert thresholds.
+	•	Critical User Journeys (CUJs)
+	•	Install extension → login → auto-fetch reliability scores for current BI report.
+	•	Detect anomalies in BI dashboard → view root-cause analysis directly in sidebar.
+	•	Testing & Compliance
+	•	Cross-browser validation on Chrome (latest stable).
+	•	Compatibility with Power BI, Tableau, Looker (MVP), with graceful fallbacks for unsupported tools.
+	•	HTTPS-only API calls; compliance with BI vendor extension policies.
+	•	Deployment
+	•	Packaging and publishing to Chrome Web Store.
+	•	Documentation: installation guide, user guide, admin configuration guide.
+Vendor Development Guide
+ADOC Chrome Extension for BI Tools - Vendor Development Guide
+Executive Summary
+This document provides comprehensive requirements and technical specifications for building a Chrome extension that integrates ADOC (Acceldata Data Observability Cloud) with Business Intelligence (BI) tools. The extension will enable BI users to view data reliability information directly within their BI tools, bridging the gap between data observability and data consumption.
+	•	Project Overview
+1.1 Background
+ADOC is a data observability platform that provides data reliability and quality scores for various data assets. A critical final stage in data usage is consumption through BI/Dashboarding tools such as PowerBI, Tableau, and Looker. By integrating ADOC directly into these tools via a Chrome extension, end users can receive real-time notifications about data quality issues affecting their reports and dashboards.
+1.2 Business Objectives
+Notify BI users about data quality issues within their workflow Show data reliability scores for columns and tables used in reports/dashboards Help users understand which data assets are affected by quality issues Provide ADOC capabilities without leaving the BI tool interface 1.3 Supported BI Tools (Priority Order)
+PowerBI (Phase 1 - Highest Priority) Tableau (Phase 2) Looker (Phase 3) 2. Core Requirements
+2.1 Functional Requirements
+2.1.1 Data Reliability Score Display
+Requirement: Display trust scores based on columns used by reports/dashboards
+Location: Overlay or sidebar within the BI tool interface Information Displayed: Overall data reliability score (0-100%) Column-level reliability scores Asset-level reliability scores Last updated timestamp Number of open alerts Related Jira Issues:
+EXT-1: Chrome Extension for BI tools ACR-1324: Display a trust score based on columns used by reports/dashboards in PowerBI 2.1.2 Alert Notifications
+Requirement: Display active data quality alerts relevant to the current dashboard/report
+Alert Types to Display: Data Quality issues Data Drift alerts Schema Drift alerts Reconciliation issues Data Anomalies Data Freshness issues Alert Information: Alert severity (Critical, High, Medium, Low) Alert description Affected assets/columns Time of occurrence Link to ADOC platform for details 2.1.3 Lineage Visualization
+Requirement: Show simplified data lineage for assets used in current view
+Display upstream data sources Show pipeline dependencies Highlight impacted downstream reports Indicate which assets have quality issues 2.1.4 Quick Actions
+Navigate to ADOC – Direct link to asset in ADOC platform View Policy Details – Access policy execution results Acknowledge Alert – Mark alert as acknowledged Filter by Severity – Toggle alert visibility by severity level 2.2 Technical Requirements
+2.2.1 Chrome Extension Architecture
+Extension Type: Chrome Manifest V3
+Components Required:
+Content Script: Inject UI elements into BI tool pages Detect current dashboard/report context Listen for page changes Background Service Worker: Handle API communication with ADOC Manage authentication state Cache data for performance Popup Interface: Configuration settings Quick view of all alerts Authentication management Options Page: ADOC server URL configuration API key management Notification preferences Display customization options 2.2.2 Permission Requirements
+{
+"permissions": [
+"storage",  "activeTab",  "notifications"  
+],
+"host_permissions": [
+"https://app.powerbi.com/*",  "https://*.tableau.com/*",  "https://*.looker.com/*",  "https://*.acceldata.io/*",  "https://*.acceldata.dev/*"  
+]
+}
+
+	•	ADOC API Integration
+3.1 Authentication
+Method: API Key-based Authentication
+Users must generate API keys from ADOC Admin Central:
+Access Key: Public identifier Secret Key: Private authentication token Authentication Headers:
+{
+"X-ACCESS-KEY": "",
+"X-SECRET-KEY": "",
+"Content-Type": "application/json"
+}
+3.2 Key API Endpoints
+3.2.1 Asset Search API
+Purpose: Find ADOC assets matching BI tool tables/columns
+Endpoint: GET /api/v1/assets/search
+Parameters:
+query: Asset name or FQN assetType: TABLE, COLUMN, etc. dataSourceType: SNOWFLAKE, BIGQUERY, DATABRICKS, etc. Response:
+{
+"assets": [
+{    "id": "asset-uuid",    "name": "TABLE_NAME",    "fullyQualifiedName": "DB.SCHEMA.TABLE",    "assetType": "TABLE",    "dataSource": {      "id": "datasource-uuid",      "name": "Snowflake Production",      "type": "SNOWFLAKE"    },    "reliabilityScore": 95.5,    "lastUpdated": "2025-10-18T10:30:00Z"  }  
+]
+}
+3.2.2 Data Reliability Score API
+Purpose: Get current reliability scores for assets
+Endpoint: GET /api/v1/assets/{assetId}/reliability
+Response:
+{
+"assetId": "asset-uuid",
+"overallScore": 95.5,
+"scoreBreakdown": {
+"accuracy": 98.0,  "completeness": 95.0,  "consistency": 94.0,  "timeliness": 96.0,  "uniqueness": 97.0,  "validity": 94.5  
+},
+"columnScores": [
+{    "columnName": "USER_ID",    "score": 99.0,    "failingRules": 0  },  {    "columnName": "EMAIL",    "score": 92.0,    "failingRules": 2  }  
+],
+"lastEvaluated": "2025-10-18T10:30:00Z"
+}
+3.2.3 Alerts API
+Purpose: Get active alerts for specific assets
+Endpoint: GET /api/v1/alerts
+Parameters:
+assetIds: Comma-separated list of asset IDs status: OPEN, ACKNOWLEDGED, CLOSED severity: CRITICAL, HIGH, MEDIUM, LOW Response:
+{
+"alerts": [
+{    "id": "alert-uuid",    "title": "Data Quality Threshold Breached",    "description": "Email column has 15% null values exceeding threshold",    "severity": "HIGH",    "status": "OPEN",    "affectedAssets": [      {        "assetId": "asset-uuid",        "assetName": "USERS_TABLE",        "columns": ["EMAIL"]      }    ],    "policyName": "User Data Quality Policy",    "failingRules": [      {        "ruleName": "Null Value Check",        "ruleType": "COMPLETENESS",        "threshold": 5.0,        "actualValue": 15.0      }    ],    "createdAt": "2025-10-18T09:15:00Z",    "link": "https://adoc.acceldata.io/alerts/alert-uuid"  }  
+]
+}
+3.2.4 Lineage API
+Purpose: Get asset lineage information
+Endpoint: GET /api/v1/assets/{assetId}/lineage
+Parameters:
+direction: UPSTREAM, DOWNSTREAM, BOTH depth: Number of levels (default: 2) Response:
+{
+"assetId": "asset-uuid",
+"lineage": {
+"upstream": [    {      "assetId": "source-asset-uuid",      "assetName": "RAW_USERS",      "assetType": "TABLE",      "hasAlerts": false    }  ],  "downstream": [    {      "assetId": "report-asset-uuid",      "assetName": "User Analytics Dashboard",      "assetType": "POWERBI_DASHBOARD",      "hasAlerts": true    }  ]  
+}
+}
+3.2.5 PowerBI Specific APIs
+Purpose: Get PowerBI-specific metadata
+Endpoint: GET /api/v1/bi-tools/powerbi/workspaces/{workspaceId}/reports/{reportId}
+Response:
+{
+"reportId": "powerbi-report-id",
+"reportName": "Sales Dashboard",
+"workspaceName": "Analytics",
+"datasetId": "dataset-id",
+"underlyingAssets": [
+{    "adocAssetId": "asset-uuid",    "tableName": "SALES_FACT",    "columnUsage": ["REVENUE", "DATE", "REGION"],    "reliabilityScore": 94.5,    "openAlerts": 1  }  
+],
+"lastRefreshed": "2025-10-18T08:00:00Z"
+}
+3.3 SDK Reference
+ADOC provides a Java SDK that can serve as a reference for API usage patterns. While the Chrome extension will use REST APIs directly, reviewing the SDK documentation can provide insights into:
+API authentication patterns Common request/response structures Error handling approaches Rate limiting considerations SDK Documentation: Available at /api/v1/assets, /api/v1/policies, /api/v1/datasources
+	•	BI Tool Specific Integration
+4.1 PowerBI Integration (Phase 1)
+4.1.1 Context Detection
+Challenge: Identify which PowerBI report/dashboard is currently active
+Approach:
+// Detect PowerBI workspace and report from URL
+// Example URL: https://app.powerbi.com/groups/{workspaceId}/reports/{reportId}
+function detectPowerBIContext() {
+const urlPattern = //groups/([^/]+)/reports/([^/]+)/;
+const match = window.location.href.match(urlPattern);
+if (match) {
+return {    workspaceId: match[1],    reportId: match[2],    toolType: 'POWERBI'  };  
+}
+return null;
+}
+4.1.2 Asset Mapping
+Challenge: Map PowerBI semantic model tables to ADOC assets
+Strategy:
+Extract dataset/semantic model ID from PowerBI Query ADOC for PowerBI datasource connections Match PowerBI semantic model tables to physical data assets Cache mappings for performance Mapping Flow:
+PowerBI Report → PowerBI Semantic Model → PowerBI Semantic Model Table → 
+Physical Data Asset (Snowflake Table) → ADOC Asset
+4.1.3 UI Injection Points
+Recommended Locations:
+Sidebar Panel: Add a collapsible panel on the right side Show overall report health score List all alerts affecting the report Display asset reliability scores Column-Level Indicators: Add small badges next to field names Green: High reliability (>90%) Yellow: Medium reliability (70-90%) Red: Low reliability (<70%) Exclamation: Active alerts Notification Toast: Show pop-up notifications when: New critical alerts appear Reliability score drops significantly Data freshness issues detected 4.1.4 PowerBI-Specific Considerations
+Known Assets Types:
+POWERBI_WORKSPACE POWERBI_DATAFLOW POWERBI_SEMANTIC_MODEL POWERBI_SEMANTIC_MODEL_TABLE POWERBI_SEMANTIC_MODEL_COLUMN POWERBI_DATASOURCE POWERBI_REPORT POWERBI_DASHBOARD POWERBI_TILE POWERBI_PAGE Supported Physical Data Sources (for auto-lineage):
+Snowflake Google BigQuery Databricks Unity Catalog Azure Synapse Analytics Dedicated Pool 4.2 Tableau Integration (Phase 2)
+4.2.1 Context Detection
+// Detect Tableau workbook and view from URL
+// Example: https://online.tableau.com/#/site/{site}/workbooks/{workbookId}
+function detectTableauContext() {
+const urlPattern = //site/([^/]+)/workbooks/([^/]+)/;
+const match = window.location.href.match(urlPattern);
+if (match) {
+return {    siteId: match[1],    workbookId: match[2],    toolType: 'TABLEAU'  };  
+}
+return null;
+}
+4.2.2 Tableau-Specific Features
+Data Quality Warning Integration:
+If Tableau has Data Management add-on with Catalog enabled Extension can push ADOC alerts as Tableau Data Quality Warnings Warnings appear natively in Tableau interface Asset Types:
+TABLEAU_WORKBOOK TABLEAU_WORKSHEET TABLEAU_DASHBOARD TABLEAU_DATA_SOURCE (Published/Embedded) TABLEAU_FIELD 4.3 Looker Integration (Phase 3)
+4.3.1 Context Detection
+// Detect Looker dashboard/explore
+function detectLookerContext() {
+const urlPattern = //dashboards/([^/?]+)/;
+const match = window.location.href.match(urlPattern);
+if (match) {
+return {    dashboardId: match[1],    toolType: 'LOOKER'  };  
+}
+return null;
+}
+4.3.2 Looker-Specific Assets
+LOOKER_DASHBOARD LOOKER_QUERY LOOKER_FIELD LOOKER_VIEW LOOKER_MODEL LOOKER_CONNECTION 5. User Interface Design
+5.1 Extension Popup
+Dimensions: 400px x 600px
+Sections:
+Header ADOC logo Connection status indicator Settings icon Quick Stats Number of monitored assets Total open alerts Average reliability score Alert List Grouped by severity Filterable by asset Click to view details Quick Actions Open ADOC Dashboard Refresh Data Configure Settings 5.2 In-Page Sidebar
+Collapsible Panel Design:
+┌─────────────────────────────────┐
+│ ADOC Data Reliability [X] │
+├─────────────────────────────────┤
+│ │
+│ Overall Report Score: 94% 🟢 │
+│ │
+│ ⚠ 2 Active Alerts │
+│ ├─ HIGH: Null value threshold │
+│ └─ MEDIUM: Freshness delay │
+│ │
+│ 📊 Asset Scores: │
+│ ├─ USERS_TABLE: 92% 🟡 │
+│ ├─ SALES_FACT: 98% 🟢 │
+│ └─ PRODUCTS: 89% 🟡 │
+│ │
+│ [View in ADOC] [Refresh] │
+│ │
+└─────────────────────────────────┘
+5.3 Column Badges
+Badge Types:
+
+✓
+!
+⚠
+🔔
+5.4 Notification Toast
+Design:
+Position: Top-right corner Duration: 5 seconds (dismissible) Types: Success, Warning, Error, Info Include: Icon, message, action button 6. Configuration & Settings
+6.1 Options Page
+Configuration Fields:
+ADOC Connection Server URL (e.g., https://adoc.acceldata.io) API Access Key API Secret Key Test Connection button Notification Preferences Enable browser notifications Alert severity threshold (Critical, High, Medium, Low) Notification frequency (Real-time, Hourly, Daily) Sound on/off Display Settings Show sidebar by default Badge position (left/right of field names) Color scheme (light/dark) Refresh interval (1, 5, 15, 30 minutes) BI Tool Specific Enable for PowerBI Enable for Tableau Enable for Looker Custom CSS overrides (advanced) 6.2 Data Caching Strategy
+Purpose: Minimize API calls and improve performance
+Cache Layers:
+Session Storage: Current page context Active dashboard/report info Current alert list Asset mappings TTL: Session duration Local Storage: Persistent configuration User settings API credentials (encrypted) Asset metadata cache TTL: 24 hours (configurable) In-Memory Cache: Runtime data API response cache Pending requests TTL: 5 minutes (configurable) Cache Invalidation:
+User-triggered refresh Manual cache clear TTL expiration Error responses Configuration changes 7. Error Handling & Edge Cases
+7.1 Common Error Scenarios
+7.1.1 Authentication Errors
+Scenario: Invalid or expired API keys
+Handling:
+if (response.status === 401) {
+// Clear cached credentials
+chrome.storage.local.remove(['accessKey', 'secretKey']);
+// Show notification
+showNotification({
+type: 'error',  message: 'ADOC authentication failed. Please check your API keys.',  action: {    text: 'Configure',    onClick: () => chrome.runtime.openOptionsPage()  }  
+});
+}
+7.1.2 Network Errors
+Scenario: ADOC server unreachable
+Handling:
+Show cached data with warning indicator Retry with exponential backoff Display offline mode message 7.1.3 Asset Not Found
+Scenario: PowerBI table doesn't map to any ADOC asset
+Handling:
+if (asset === null) {
+showBadge({
+type: 'unknown',  message: 'Asset not found in ADOC. It may not be cataloged yet.'  
+});
+}
+7.1.4 Rate Limiting
+Scenario: Too many API requests
+Handling:
+Implement request queue Respect rate limit headers Show warning to user Increase cache TTL temporarily 7.2 Browser Compatibility
+Target: Chrome 120+
+Fallbacks:
+Check for required APIs before use Graceful degradation for unsupported features Polyfills for edge cases 8. Security Considerations
+8.1 Credential Storage
+Requirements:
+Store API keys encrypted using Web Crypto API Never log credentials to console Use chrome.storage.local (not sync) for sensitive data Implement auto-logout after inactivity Example:
+// Encrypt before storage
+async function storeCredentials(accessKey, secretKey) {
+const encrypted = await encryptData({accessKey, secretKey});
+await chrome.storage.local.set({credentials: encrypted});
+}
+// Decrypt on retrieval
+async function getCredentials() {
+const {credentials} = await chrome.storage.local.get('credentials');
+return await decryptData(credentials);
+}
+8.2 Content Security Policy
+Extension CSP:
+{
+"content_security_policy": {
+"extension_pages": "script-src 'self'; object-src 'self'"  
+}
+}
+8.3 Data Privacy
+Principles:
+Only collect necessary data Never send BI tool credentials to ADOC No telemetry without user consent Clear data on uninstall 9. Performance Optimization
+9.1 Lazy Loading
+Load extension UI only when needed Defer non-critical API calls Use intersection observer for visible elements 9.2 Debouncing & Throttling
+// Debounce search/filter operations
+const debouncedSearch = debounce((query) => {
+searchAssets(query);
+}, 300);
+// Throttle scroll events
+const throttledRefresh = throttle(() => {
+refreshVisibleBadges();
+}, 1000);
+9.3 Efficient DOM Manipulation
+Use document fragments for batch updates Minimize reflows and repaints Cache DOM queries Use event delegation 10. Testing Requirements
+10.1 Unit Tests
+Framework: Jest
+Coverage Requirements: >80%
+Test Cases:
+API client functions Authentication logic Data transformation Cache management Error handling 10.2 Integration Tests
+Framework: Puppeteer or Playwright
+Test Scenarios:
+Extension installation Configuration flow API integration BI tool page interaction Cross-browser compatibility 10.3 Manual Testing Checklist
+PowerBI:
+Extension loads on PowerBI workspace Report context correctly detected Asset mappings accurate Alerts display correctly Badges appear on columns Sidebar is functional Links to ADOC work Notifications appear Settings persist Performance is acceptable Tableau:
+All of the above for Tableau Looker:
+All of the above for Looker 11. Deployment & Distribution
+11.1 Chrome Web Store
+Requirements:
+Developer account Privacy policy document Store listing assets: Icon (128x128, 48x48, 16x16) Screenshots (1280x800 or 640x400) Promotional tile (440x280) Description Categories 11.2 Version Management
+Semantic Versioning: MAJOR.MINOR.PATCH
+Release Process:
+Update version in manifest.json Create changelog entry Run full test suite Build production bundle Submit to Chrome Web Store Monitor for issues 11.3 Update Strategy
+Auto-updates: Enabled by default via Chrome Web Store
+Update Notifications:
+Show changelog on major updates Preserve user settings Migrate data if schema changes 12. Documentation Deliverables
+12.1 User Documentation
+Required:
+Installation Guide Prerequisites Installation steps Initial configuration User Manual Feature overview How to use each feature Troubleshooting guide FAQ Video Tutorials Quick start guide (2-3 min) Feature walkthroughs (5-10 min) 12.2 Technical Documentation
+Required:
+Architecture Document System design Component diagram Data flow API Integration Guide Endpoint documentation Request/response examples Error codes Development Guide Setup instructions Build process Testing procedures Contribution guidelines 13. Success Metrics
+13.1 Adoption Metrics
+Number of installations Daily active users (DAU) Monthly active users (MAU) User retention rate 13.2 Usage Metrics
+API calls per user per day Average session duration Feature usage breakdown Alert interaction rate 13.3 Performance Metrics
+Extension load time (<2s) API response time (<500ms) Cache hit rate (>80%) Error rate (<1%) 13.4 User Satisfaction
+Chrome Web Store rating (target: >4.5/5) Support ticket volume Feature requests Bug reports Phase 3: Looker Integration (6 weeks)
+Similar structure to Phase 2
+	•	Support & Maintenance
+15.1 Issue Tracking
+Platform: JIRA (linked to project EXT)
+Process:
+Users report issues via Chrome Web Store or support email Triage and prioritize Assign to developer Fix and test Deploy update Close ticket 15.2 Regular Maintenance
+Activities:
+Monitor Chrome updates for compatibility Update dependencies Security patches Performance improvements API version updates 15.3 Support Channels
+Email: support@acceldata.io Documentation: docs.acceldata.io Community forum (if available) 16. Appendices
+Appendix A: ADOC Platform Overview
+ADOC provides comprehensive data observability capabilities including:
+Data Quality monitoring Data Drift detection Schema Change tracking Reconciliation Anomaly Detection Data Freshness monitoring Pipeline observability Lineage tracking Appendix B: Competitive Analysis
+Competitors like Monte Carlo, BigEye, and Metaplane offer similar BI integrations:
+Monte Carlo: Supports PowerBI, Tableau, Looker with lineage and DQ warnings BigEye: Tableau integration with popularity scores and lineage Metaplane: Multi-tool support with focus on alert notifications ADOC extension should match or exceed these capabilities.
+Appendix C: PowerBI Entity Hierarchy
+Workspace (Group)
+├── Report
+│ ├── Page
+│ └── Visual
+├── Dashboard
+│ └── Tile (sourced from Reports)
+├── Semantic Model (Dataset)
+│ ├── Table
+│ │ └── Column
+│ └── Datasource
+└── Dataflow
+├── Entity  └── Attribute  
+Appendix D: Glossary
+FQN: Fully Qualified Name (e.g., DATABASE.SCHEMA.TABLE) DQ: Data Quality BI: Business Intelligence Asset: Any data entity tracked by ADOC (table, column, dashboard, etc.) Policy: Set of data quality rules applied to assets Lineage: Data flow from source to destination Semantic Model: PowerBI term for dataset (data source + transformations) Appendix E: Contact Information
+Nitin Motgi (nitin.motgi@acceldata.io)
+Ashok G (ashok.gunasekaran@acceldata.io)
+Appendix F: API Authentication Example
+// Complete authentication flow
+class AdocApiClient {
+constructor(baseUrl, accessKey, secretKey) {
+this.baseUrl = baseUrl;  this.accessKey = accessKey;  this.secretKey = secretKey;  
+}
+async makeRequest(endpoint, options = {}) {
+const url = `${this.baseUrl}${endpoint}`;  const headers = {    'X-ACCESS-KEY': this.accessKey,    'X-SECRET-KEY': this.secretKey,    'Content-Type': 'application/json',    ...options.headers  };  try {    const response = await fetch(url, {      ...options,      headers    });    if (!response.ok) {      throw new Error(`API Error: ${response.status} ${response.statusText}`);    }    return await response.json();  } catch (error) {    console.error('ADOC API request failed:', error);    throw error;  }  
+}
+// Get asset by FQN
+async getAssetByFQN(fullyQualifiedName) {
+return this.makeRequest(`/api/v1/assets/search?query=${encodeURIComponent(fullyQualifiedName)}`);  
+}
+// Get reliability score
+async getReliabilityScore(assetId) {
+return this.makeRequest(`/api/v1/assets/${assetId}/reliability`);  
+}
+// Get active alerts
+async getAlerts(assetIds, severity = null) {
+let endpoint = `/api/v1/alerts?assetIds=${assetIds.join(',')}&status=OPEN`;  if (severity) {    endpoint += `&severity=${severity}`;  }  return this.makeRequest(endpoint);  
+}
+// Get lineage
+async getLineage(assetId, direction = 'BOTH', depth = 2) {
+return this.makeRequest(`/api/v1/assets/${assetId}/lineage?direction=${direction}&depth=${depth}`);  
+}
+}
+Appendix G: PowerBI Context Detection Implementation
+// Complete PowerBI context detection and asset mapping
+class PowerBIContextDetector {
+constructor(adocClient) {
+this.adocClient = adocClient;  this.currentContext = null;  
+}
+// Detect current PowerBI context
+detectContext() {
+const url = window.location.href;    // Match PowerBI URL patterns  const reportPattern = /\/groups\/([^\/]+)\/reports\/([^\/]+)/;  const dashboardPattern = /\/groups\/([^\/]+)\/dashboards\/([^\/]+)/;    let match = url.match(reportPattern);  if (match) {    return {      type: 'REPORT',      workspaceId: match[1],      reportId: match[2],      toolType: 'POWERBI'    };  }    match = url.match(dashboardPattern);  if (match) {    return {      type: 'DASHBOARD',      workspaceId: match[1],      dashboardId: match[2],      toolType: 'POWERBI'    };  }    return null;  
+}
+// Extract semantic model information from PowerBI DOM
+extractSemanticModelInfo() {
+// This requires inspecting PowerBI's internal structure  // PowerBI uses iframes and React components  // The actual implementation will need to observe DOM changes    const fields = [];    // Look for field wells, filters, and visualizations  const fieldElements = document.querySelectorAll('[data-field-name]');  fieldElements.forEach(el => {    const fieldName = el.getAttribute('data-field-name');    const tableName = el.getAttribute('data-table-name');    if (fieldName && tableName) {      fields.push({ table: tableName, column: fieldName });    }  });    return fields;  
+}
+// Map PowerBI assets to ADOC assets
+async mapToAdocAssets(powerBIFields) {
+const assetMappings = [];    for (const field of powerBIFields) {    try {      // Query ADOC for matching asset      const fqn = `${field.table}.${field.column}`;      const result = await this.adocClient.getAssetByFQN(fqn);           if (result && result.assets && result.assets.length > 0) {        assetMappings.push({          powerBITable: field.table,          powerBIColumn: field.column,          adocAsset: result.assets[0]        });      }    } catch (error) {      console.error(`Failed to map field ${field.table}.${field.column}:`, error);    }  }    return assetMappings;  
+}
+// Start monitoring for context changes
+startMonitoring(callback) {
+// Monitor URL changes  let lastUrl = window.location.href;    const observer = new MutationObserver(() => {    if (lastUrl !== window.location.href) {      lastUrl = window.location.href;      const newContext = this.detectContext();           if (JSON.stringify(newContext) !== JSON.stringify(this.currentContext)) {        this.currentContext = newContext;        callback(newContext);      }    }  });    observer.observe(document.body, {    childList: true,    subtree: true  });    return observer;  
+}
+}
+Appendix H: UI Component Examples
+// Sidebar component implementation
+class AdocSidebar {
+constructor(container) {
+this.container = container;  this.isVisible = true;  
+}
+render(data) {
+const sidebarHTML = `    <div class="adoc-sidebar ${this.isVisible ? 'visible' : 'hidden'}">      <div class="adoc-header">        <img src="${chrome.runtime.getURL('icons/logo.png')}" alt="ADOC" class="adoc-logo">        <span class="adoc-title">Data Reliability</span>        <button class="adoc-toggle" id="adoc-toggle">×</button>      </div>           <div class="adoc-content">        <!-- Overall Score -->        <div class="adoc-score-section">          <div class="adoc-score-header">Overall Report Score</div>          <div class="adoc-score-value ${this.getScoreClass(data.overallScore)}">            ${data.overallScore}%            <span class="adoc-score-indicator">${this.getScoreEmoji(data.overallScore)}</span>          </div>        </div>               <!-- Active Alerts -->        <div class="adoc-alerts-section">          <div class="adoc-section-header">            <span>⚠ Active Alerts</span>            <span class="adoc-badge">${data.alerts.length}</span>          </div>          <div class="adoc-alerts-list">            ${this.renderAlerts(data.alerts)}          </div>        </div>               <!-- Asset Scores -->        <div class="adoc-assets-section">          <div class="adoc-section-header">📊 Asset Scores</div>          <div class="adoc-assets-list">            ${this.renderAssets(data.assets)}          </div>        </div>               <!-- Actions -->        <div class="adoc-actions">          <button class="adoc-btn adoc-btn-primary" id="adoc-view-platform">            View in ADOC          </button>          <button class="adoc-btn adoc-btn-secondary" id="adoc-refresh">            Refresh          </button>        </div>      </div>    </div>  `;    this.container.innerHTML = sidebarHTML;  this.attachEventListeners();  
+}
+renderAlerts(alerts) {
+if (!alerts || alerts.length === 0) {    return '<div class="adoc-empty">No active alerts</div>';  }    return alerts.map(alert => `    <div class="adoc-alert adoc-alert-${alert.severity.toLowerCase()}">      <div class="adoc-alert-header">        <span class="adoc-alert-severity">${alert.severity}</span>        <span class="adoc-alert-title">${alert.title}</span>      </div>      <div class="adoc-alert-description">${alert.description}</div>      <div class="adoc-alert-footer">        <a href="${alert.link}" target="_blank" class="adoc-alert-link">View Details →</a>      </div>    </div>  `).join('');  
+}
+renderAssets(assets) {
+return assets.map(asset => `    <div class="adoc-asset-item">      <div class="adoc-asset-name">${asset.name}</div>      <div class="adoc-asset-score ${this.getScoreClass(asset.score)}">        ${asset.score}% ${this.getScoreEmoji(asset.score)}      </div>    </div>  `).join('');  
+}
+getScoreClass(score) {
+if (score >= 90) return 'score-high';  if (score >= 70) return 'score-medium';  return 'score-low';  
+}
+getScoreEmoji(score) {
+if (score >= 90) return '🟢';  if (score >= 70) return '🟡';  return '🔴';  
+}
+attachEventListeners() {
+document.getElementById('adoc-toggle')?.addEventListener('click', () => {    this.toggle();  });    document.getElementById('adoc-view-platform')?.addEventListener('click', () => {    chrome.runtime.sendMessage({ action: 'openAdocPlatform' });  });    document.getElementById('adoc-refresh')?.addEventListener('click', () => {    chrome.runtime.sendMessage({ action: 'refreshData' });  });  
+}
+toggle() {
+this.isVisible = !this.isVisible;  const sidebar = document.querySelector('.adoc-sidebar');  if (sidebar) {    sidebar.classList.toggle('hidden');  }  
+}
+}
+Appendix I: CSS Styling Guide
+/* ADOC Chrome Extension Styles */
+/* Sidebar Container */
+.adoc-sidebar {
+position: fixed;
+top: 0;
+right: 0;
+width: 350px;
+height: 100vh;
+background: #ffffff;
+border-left: 1px solid #e0e0e0;
+box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+z-index: 999999;
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+display: flex;
+flex-direction: column;
+transition: transform 0.3s ease;
+}
+.adoc-sidebar.hidden {
+transform: translateX(100%);
+}
+/* Header */
+.adoc-header {
+display: flex;
+align-items: center;
+padding: 16px;
+border-bottom: 1px solid #e0e0e0;
+background: #f8f9fa;
+}
+.adoc-logo {
+width: 24px;
+height: 24px;
+margin-right: 8px;
+}
+.adoc-title {
+flex: 1;
+font-size: 16px;
+font-weight: 600;
+color: #333;
+}
+.adoc-toggle {
+background: none;
+border: none;
+font-size: 24px;
+cursor: pointer;
+color: #666;
+padding: 0;
+width: 24px;
+height: 24px;
+}
+/* Content */
+.adoc-content {
+flex: 1;
+overflow-y: auto;
+padding: 16px;
+}
+/* Score Section */
+.adoc-score-section {
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+color: white;
+padding: 20px;
+border-radius: 8px;
+margin-bottom: 16px;
+}
+.adoc-score-header {
+font-size: 14px;
+opacity: 0.9;
+margin-bottom: 8px;
+}
+.adoc-score-value {
+font-size: 36px;
+font-weight: bold;
+display: flex;
+align-items: center;
+gap: 8px;
+}
+.adoc-score-indicator {
+font-size: 24px;
+}
+/* Score Classes */
+.score-high { color: #10b981; }
+.score-medium { color: #f59e0b; }
+.score-low { color: #ef4444; }
+/* Section Headers */
+.adoc-section-header {
+font-size: 14px;
+font-weight: 600;
+margin-bottom: 12px;
+color: #333;
+display: flex;
+align-items: center;
+justify-content: space-between;
+}
+/* Alerts */
+.adoc-alerts-section {
+margin-bottom: 24px;
+}
+.adoc-alert {
+background: white;
+border-left: 4px solid;
+padding: 12px;
+margin-bottom: 8px;
+border-radius: 4px;
+box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.adoc-alert-critical { border-color: #dc2626; }
+.adoc-alert-high { border-color: #ea580c; }
+.adoc-alert-medium { border-color: #f59e0b; }
+.adoc-alert-low { border-color: #3b82f6; }
+.adoc-alert-header {
+display: flex;
+align-items: center;
+gap: 8px;
+margin-bottom: 8px;
+}
+.adoc-alert-severity {
+font-size: 10px;
+font-weight: 600;
+padding: 2px 6px;
+border-radius: 3px;
+text-transform: uppercase;
+background: #f3f4f6;
+color: #374151;
+}
+.adoc-alert-title {
+font-weight: 600;
+font-size: 13px;
+color: #111827;
+}
+.adoc-alert-description {
+font-size: 12px;
+color: #6b7280;
+margin-bottom: 8px;
+}
+.adoc-alert-link {
+font-size: 12px;
+color: #3b82f6;
+text-decoration: none;
+}
+/* Assets */
+.adoc-asset-item {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 8px 0;
+border-bottom: 1px solid #f3f4f6;
+}
+.adoc-asset-name {
+font-size: 13px;
+color: #374151;
+font-weight: 500;
+}
+.adoc-asset-score {
+font-size: 13px;
+font-weight: 600;
+}
+/* Actions */
+.adoc-actions {
+display: flex;
+gap: 8px;
+margin-top: 16px;
+}
+.adoc-btn {
+flex: 1;
+padding: 10px;
+border: none;
+border-radius: 6px;
+font-size: 14px;
+font-weight: 500;
+cursor: pointer;
+transition: all 0.2s;
+}
+.adoc-btn-primary {
+background: #3b82f6;
+color: white;
+}
+.adoc-btn-primary:hover {
+background: #2563eb;
+}
+.adoc-btn-secondary {
+background: #f3f4f6;
+color: #374151;
+}
+.adoc-btn-secondary:hover {
+background: #e5e7eb;
+}
+/* Column Badges */
+.adoc-badge {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+width: 18px;
+height: 18px;
+border-radius: 50%;
+font-size: 11px;
+font-weight: 600;
+margin-left: 4px;
+cursor: pointer;
+transition: transform 0.2s;
+}
+.adoc-badge:hover {
+transform: scale(1.2);
+}
+.adoc-badge.adoc-high {
+background: #10b981;
+color: white;
+}
+.adoc-badge.adoc-medium {
+background: #f59e0b;
+color: white;
+}
+.adoc-badge.adoc-low {
+background: #ef4444;
+color: white;
+}
+.adoc-badge.adoc-alert {
+background: #dc2626;
+color: white;
+animation: pulse 2s infinite;
+}
+@keyframes pulse {
+0%, 100% { opacity: 1; }
+50% { opacity: 0.6; }
+}
+/* Toast Notifications */
+.adoc-toast {
+position: fixed;
+top: 20px;
+right: 20px;
+min-width: 300px;
+max-width: 400px;
+background: white;
+border-radius: 8px;
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+padding: 16px;
+z-index: 1000000;
+animation: slideIn 0.3s ease;
+}
+@keyframes slideIn {
+from {
+transform: translateX(400px);  opacity: 0;  
+}
+to {
+transform: translateX(0);  opacity: 1;  
+}
+}
+.adoc-toast-success {
+border-left: 4px solid #10b981;
+}
+.adoc-toast-warning {
+border-left: 4px solid #f59e0b;
+}
+.adoc-toast-error {
+border-left: 4px solid #ef4444;
+}
+.adoc-toast-info {
+border-left: 4px solid #3b82f6;
+}
+/* Empty State */
+.adoc-empty {
+text-align: center;
+padding: 20px;
+color: #9ca3af;
+font-size: 13px;
+}
+Appendix J: Manifest V3 Example
+{
+"manifest_version": 3,
+"name": "ADOC Data Reliability for BI Tools",
+"version": "1.0.0",
+"description": "View data reliability scores and alerts from ADOC directly in PowerBI, Tableau, and Looker",
+"icons": {
+"16": "icons/icon16.png",  "48": "icons/icon48.png",  "128": "icons/icon128.png"  
+},
+"action": {
+"default_popup": "popup.html",  "default_icon": {    "16": "icons/icon16.png",    "48": "icons/icon48.png",    "128": "icons/icon128.png"  }  
+},
+"background": {
+"service_worker": "background.js"  
+},
+"content_scripts": [
+{    "matches": [      "https://app.powerbi.com/*",      "https://msit.powerbi.com/*"    ],    "js": ["content-powerbi.js"],    "css": ["styles.css"],    "run_at": "document_end"  },  {    "matches": [      "https://*.tableau.com/*",      "https://online.tableau.com/*"    ],    "js": ["content-tableau.js"],    "css": ["styles.css"],    "run_at": "document_end"  },  {    "matches": [      "https://*.looker.com/*",      "https://*.cloud.looker.com/*"    ],    "js": ["content-looker.js"],    "css": ["styles.css"],    "run_at": "document_end"  }  
+],
+"permissions": [
+"storage",  "notifications",  "activeTab"  
+],
+"host_permissions": [
+"https://app.powerbi.com/*",  "https://*.tableau.com/*",  "https://*.looker.com/*",  "https://*.acceldata.io/*",  "https://*.acceldata.dev/*"  
+],
+"options_page": "options.html",
+"web_accessible_resources": [
+{    "resources": ["icons/*", "styles.css"],    "matches": ["<all_urls>"]  }  
+]
+}
+

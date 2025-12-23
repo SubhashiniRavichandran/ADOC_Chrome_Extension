@@ -1,0 +1,99 @@
+{
+  "manifest_version": 3,
+  "name": "ADOC Data Reliability for BI Tools",
+  "version": "1.0.0",
+  "description": "View data reliability scores and alerts from ADOC directly in PowerBI, Tableau, and Looker",
+  "icons": {
+    "16": "src/icons/icon16.png",
+    "48": "src/icons/icon48.png",
+    "128": "src/icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "src/icons/icon16.png",
+      "48": "src/icons/icon48.png",
+      "128": "src/icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "src/background/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://app.powerbi.com/*",
+        "https://msit.powerbi.com/*"
+      ],
+      "js": [
+        "src/content/enhanced-sidebar.js",
+        "src/content/column-badge-injector.js",
+        "src/content/content-powerbi.js"
+      ],
+      "css": [
+        "src/content/styles.css"
+      ],
+      "run_at": "document_end"
+    },
+    {
+      "matches": [
+        "*://*.tableau.com/*",
+        "https://online.tableau.com/*"
+      ],
+      "js": [
+        "src/content/content-tableau.js"
+      ],
+      "css": [
+        "src/content/styles.css"
+      ],
+      "run_at": "document_end"
+    },
+    {
+      "matches": [
+        "*://*.looker.com/*",
+        "*://*.cloud.looker.com/*"
+      ],
+      "js": [
+        "src/content/content-looker.js"
+      ],
+      "css": [
+        "src/content/styles.css"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "permissions": [
+    "storage",
+    "notifications",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://app.powerbi.com/*",
+    "https://msit.powerbi.com/*",
+    "*://*.tableau.com/*",
+    "https://online.tableau.com/*",
+    "*://*.looker.com/*",
+    "*://*.cloud.looker.com/*",
+    "*://*.acceldata.io/*",
+    "*://*.acceldata.app/*"
+  ],
+  "options_page": "src/options/options.html",
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/icons/*",
+        "src/content/styles.css",
+        "src/content/styles-enhanced.css",
+        "src/sidebar/*",
+        "src/utils/powerbi-detector.js",
+        "src/sidebar/sidebar-components.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}
