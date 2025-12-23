@@ -13,8 +13,8 @@
     y="0"
     width="48"
     height="48"
-    rx="9.6"
-    ry="9.6"
+    rx="9.600000000000001"
+    ry="9.600000000000001"
     fill="url(#gradient48)"
   />
 
@@ -29,4 +29,6 @@
     text-anchor="middle"
     dominant-baseline="central"
   >ADOC</text>
+
+  
 </svg>
