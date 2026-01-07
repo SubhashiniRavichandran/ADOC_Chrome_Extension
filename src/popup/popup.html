@@ -3,111 +3,140 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ADOC Data Reliability</title>
+  <title>Acceldata</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <div class="popup-container">
-    <!-- Header -->
+    <!-- Header with logo and close button -->
     <div class="popup-header">
-      <div class="popup-logo">
-        <h1>ADOC</h1>
-        <p>Data Reliability</p>
-      </div>
-      <button id="settings-btn" class="icon-btn" title="Settings">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
-        </svg>
-      </button>
-    </div>
-
-    <!-- Connection Status -->
-    <div id="connection-status" class="connection-status">
-      <div class="status-indicator"></div>
-      <span id="status-text">Checking connection...</span>
+      <div class="logo">A</div>
+      <button id="close-btn" class="close-btn" title="Close">✕</button>
     </div>
 
     <!-- Main Content -->
-    <div id="popup-content" class="popup-content">
-      <!-- Loading State -->
-      <div id="loading-state" class="loading-state">
-        <div class="spinner"></div>
-        <p>Loading...</p>
-      </div>
+    <div class="popup-content">
 
-      <!-- Not Configured State -->
-      <div id="not-configured" class="state-container" style="display: none;">
-        <div class="empty-state">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
+      <!-- View 1: Not Logged In -->
+      <div id="view-login" class="view">
+        <div class="icon-container">
+          <svg class="db-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <ellipse cx="12" cy="5" rx="9" ry="3"/>
+            <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/>
+            <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/>
           </svg>
-          <h3>Not Configured</h3>
-          <p>Please configure your ADOC credentials to get started.</p>
-          <button id="configure-btn" class="btn btn-primary">Configure Now</button>
         </div>
+        <p class="subtitle">Check data quality instantly and make decisions you can trust</p>
+        <button id="login-btn" class="btn btn-primary">Login to Acceldata</button>
       </div>
 
-      <!-- Dashboard State -->
-      <div id="dashboard-state" class="state-container" style="display: none;">
-        <!-- Quick Stats -->
-        <div class="quick-stats">
+      <!-- View 2: Dashboard (After Login) -->
+      <div id="view-dashboard" class="view" style="display: none;">
+        <div class="dashboard-header">
+          <h2>ADOC Dashboard</h2>
+          <p class="dashboard-subtitle">Monitor your data quality</p>
+        </div>
+
+        <div class="dashboard-stats">
           <div class="stat-card">
-            <div class="stat-label">Monitored Assets</div>
-            <div id="asset-count" class="stat-value">-</div>
+            <div class="stat-icon">📊</div>
+            <div class="stat-value" id="total-assets">-</div>
+            <div class="stat-label">Total Assets</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Open Alerts</div>
-            <div id="alert-count" class="stat-value">-</div>
+            <div class="stat-icon">⚠️</div>
+            <div class="stat-value" id="total-alerts">-</div>
+            <div class="stat-label">Active Alerts</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Avg. Score</div>
-            <div id="avg-score" class="stat-value">-</div>
+            <div class="stat-icon">✅</div>
+            <div class="stat-value" id="avg-quality">-</div>
+            <div class="stat-label">Avg Quality</div>
           </div>
         </div>
 
-        <!-- Current Context -->
-        <div id="current-context-section" class="section" style="display: none;">
-          <h3>Current Page</h3>
-          <div id="current-context" class="context-info">
-            <!-- Dynamic content -->
-          </div>
-        </div>
-
-        <!-- Recent Alerts -->
-        <div class="section">
-          <div class="section-header">
-            <h3>Recent Alerts</h3>
-            <button id="filter-btn" class="text-btn">Filter</button>
-          </div>
-          <div id="alerts-list" class="alerts-list">
-            <!-- Dynamic content -->
-          </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="section quick-actions">
-          <button id="open-adoc-btn" class="btn btn-secondary">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M14 2.5a.5.5 0 0 0-.5-.5h-6a.5.5 0 0 0 0 1h4.793L2.146 13.146a.5.5 0 0 0 .708.708L13 3.707V8.5a.5.5 0 0 0 1 0v-6z"/>
-            </svg>
-            Open ADOC Dashboard
-          </button>
-          <button id="refresh-btn" class="btn btn-secondary">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+        <div class="dashboard-actions">
+          <button id="fetch-from-dashboard-btn" class="btn btn-primary btn-large">
+            <svg class="btn-icon" width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
               <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
               <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
             </svg>
-            Refresh Data
+            Fetch Power BI Data Quality
+          </button>
+          <button id="open-adoc-btn" class="btn btn-secondary">
+            <svg class="btn-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M14 2.5a.5.5 0 0 0-.5-.5h-6a.5.5 0 0 0 0 1h4.793L2.146 13.146a.5.5 0 0 0 .708.708L13 3.707V8.5a.5.5 0 0 0 1 0v-6z"/>
+            </svg>
+            Open ADOC Platform
+          </button>
+        </div>
+
+        <div class="dashboard-info">
+          <p id="current-page-info">Open a Power BI report to fetch data quality metrics</p>
+        </div>
+      </div>
+
+      <!-- View 3: Fetching (Loading State) -->
+      <div id="view-loading" class="view" style="display: none;">
+        <div class="icon-container">
+          <svg class="db-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <ellipse cx="12" cy="5" rx="9" ry="3"/>
+            <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/>
+            <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/>
+          </svg>
+        </div>
+        <p class="subtitle">Fetching data quality metrics from Acceldata platform...</p>
+        <button class="btn btn-primary btn-loading" disabled>
+          <svg class="spinner" width="16" height="16" viewBox="0 0 16 16">
+            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" fill="none" stroke-dasharray="31.4" stroke-dashoffset="10"/>
+          </svg>
+          Fetching...
+        </button>
+      </div>
+
+      <!-- View 4A: Case 1A - Data Found, No Alerts -->
+      <div id="view-case-1a" class="view view-data" style="display: none;">
+        <div class="success-banner">
+          <span class="success-icon">✅</span>
+          <span>All data quality checks passed!</span>
+        </div>
+        <div id="case-1a-content" class="data-content">
+          <!-- Dynamic content -->
+        </div>
+      </div>
+
+      <!-- View 4B: Case 1B - Data Found, With Alerts -->
+      <div id="view-case-1b" class="view view-data" style="display: none;">
+        <div class="warning-banner">
+          <span class="warning-icon">⚠️</span>
+          <span id="alert-summary">Data quality issues detected</span>
+        </div>
+        <div id="case-1b-content" class="data-content">
+          <!-- Dynamic content -->
+        </div>
+      </div>
+
+      <!-- View 4C: Case 2 - No Data Available -->
+      <div id="view-case-2" class="view view-empty" style="display: none;">
+        <div class="error-banner">
+          <span class="error-icon">❌</span>
+          <span>No data assets found in Acceldata</span>
+        </div>
+        <div class="empty-state-large">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2">
+            <path d="M3 3h18v18H3zM3 9h18M9 21V9"/>
+          </svg>
+          <h3>No Assets Available</h3>
+          <p>The data sources used in this Power BI report are not being monitored in Acceldata platform.</p>
+          <button id="add-assets-btn" class="btn btn-secondary">
+            <svg class="btn-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+            </svg>
+            Add Assets to ADOC
           </button>
         </div>
       </div>
-    </div>
 
-    <!-- Footer -->
-    <div class="popup-footer">
-      <span class="version">v1.0.0</span>
     </div>
   </div>
 
