@@ -1,6 +1,6 @@
 /**
- * ADOC Extension Popup - Updated with OAuth Flow
- * Handles login flow and data fetching
+ * ADOC Extension Popup - Complete Flow with Dashboard & Cases
+ * Handles: Login → Dashboard → Fetch → Display (Case 1A/1B/2)
  */
 
 // Configuration
@@ -11,26 +11,34 @@ const SESSION_CHECK_INTERVAL = 2000; // Check every 2 seconds
 let currentView = 'login';
 let isLoggedIn = false;
 let sessionCheckInterval = null;
+let dashboardData = null;
 
 // DOM Elements
-let viewLogin, viewFetch, viewLoading, viewData;
-let loginBtn, fetchBtn, closeBtn;
+let viewLogin, viewDashboard, viewLoading;
+let viewCase1A, viewCase1B, viewCase2;
+let loginBtn, fetchFromDashboardBtn, openAdocBtn, closeBtn, addAssetsBtn;
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Initialize DOM elements
   viewLogin = document.getElementById('view-login');
-  viewFetch = document.getElementById('view-fetch');
+  viewDashboard = document.getElementById('view-dashboard');
   viewLoading = document.getElementById('view-loading');
-  viewData = document.getElementById('view-data');
+  viewCase1A = document.getElementById('view-case-1a');
+  viewCase1B = document.getElementById('view-case-1b');
+  viewCase2 = document.getElementById('view-case-2');
 
   loginBtn = document.getElementById('login-btn');
-  fetchBtn = document.getElementById('fetch-btn');
+  fetchFromDashboardBtn = document.getElementById('fetch-from-dashboard-btn');
+  openAdocBtn = document.getElementById('open-adoc-btn');
   closeBtn = document.getElementById('close-btn');
+  addAssetsBtn = document.getElementById('add-assets-btn');
 
   // Set up event listeners
   loginBtn.addEventListener('click', handleLogin);
-  fetchBtn.addEventListener('click', handleFetch);
+  fetchFromDashboardBtn.addEventListener('click', handleFetch);
+  openAdocBtn.addEventListener('click', handleOpenAdoc);
   closeBtn.addEventListener('click', () => window.close());
+  addAssetsBtn.addEventListener('click', handleOpenAdoc);
 
   // Initialize
   await initialize();
@@ -45,9 +53,10 @@ async function initialize() {
     const response = await chrome.runtime.sendMessage({ type: 'GET_CREDENTIALS' });
 
     if (response.success && response.data.hasCredentials) {
-      // User has credentials - show fetch view
+      // User has credentials - show dashboard
       isLoggedIn = true;
-      showView('fetch');
+      await loadDashboard();
+      showView('dashboard');
     } else {
       // No credentials - show login view
       isLoggedIn = false;
@@ -73,8 +82,7 @@ async function handleLogin() {
     // Start monitoring for successful login
     startSessionCheck(tab.id);
 
-    // Show a message to user (optional)
-    console.log('Opened Acceldata login page. Waiting for authentication...');
+    console.log('Opened Acceldata login page. Please configure credentials after logging in.');
 
   } catch (error) {
     console.error('Error opening login page:', error);
@@ -101,9 +109,12 @@ function startSessionCheck(tabId) {
         sessionCheckInterval = null;
 
         isLoggedIn = true;
-        showView('fetch');
 
-        // Close the login tab (optional)
+        // Load dashboard and show it
+        await loadDashboard();
+        showView('dashboard');
+
+        // Optionally close the login tab
         try {
           await chrome.tabs.remove(tabId);
         } catch (e) {
@@ -125,7 +136,76 @@ function startSessionCheck(tabId) {
 }
 
 /**
- * Handle fetch button click
+ * Load dashboard data
+ */
+async function loadDashboard() {
+  try {
+    // Get summary stats from Acceldata (you can implement this endpoint)
+    // For now, use placeholder data
+    dashboardData = {
+      totalAssets: '-',
+      totalAlerts: '-',
+      avgQuality: '-'
+    };
+
+    // Update dashboard stats
+    document.getElementById('total-assets').textContent = dashboardData.totalAssets;
+    document.getElementById('total-alerts').textContent = dashboardData.totalAlerts;
+    document.getElementById('avg-quality').textContent = dashboardData.avgQuality;
+
+    // Check current page context
+    await updateCurrentPageInfo();
+
+  } catch (error) {
+    console.error('Error loading dashboard:', error);
+  }
+}
+
+/**
+ * Update current page info in dashboard
+ */
+async function updateCurrentPageInfo() {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+    if (!tab || !tab.url) {
+      document.getElementById('current-page-info').textContent =
+        'Open a Power BI report to fetch data quality metrics';
+      return;
+    }
+
+    const isPowerBI = tab.url.includes('powerbi.com');
+
+    if (isPowerBI) {
+      document.getElementById('current-page-info').innerHTML =
+        '✅ Power BI report detected. Click "Fetch Power BI Data Quality" to view metrics.';
+    } else {
+      document.getElementById('current-page-info').textContent =
+        'Open a Power BI report to fetch data quality metrics';
+    }
+  } catch (error) {
+    console.error('Error updating page info:', error);
+  }
+}
+
+/**
+ * Handle open ADOC platform
+ */
+async function handleOpenAdoc() {
+  try {
+    const response = await chrome.runtime.sendMessage({ type: 'GET_CREDENTIALS' });
+    if (response.success && response.data.baseUrl) {
+      await chrome.tabs.create({ url: response.data.baseUrl });
+    } else {
+      await chrome.tabs.create({ url: ACCELDATA_LOGIN_URL });
+    }
+  } catch (error) {
+    console.error('Error opening ADOC:', error);
+  }
+}
+
+/**
+ * Handle fetch button click from dashboard
  */
 async function handleFetch() {
   try {
@@ -144,7 +224,7 @@ async function handleFetch() {
 
     if (!isPowerBI) {
       showError('Please open a Power BI report to fetch reliability data');
-      showView('fetch');
+      showView('dashboard');
       return;
     }
 
@@ -154,7 +234,7 @@ async function handleFetch() {
     });
 
     if (!contextResponse || !contextResponse.workspaceId || !contextResponse.reportId) {
-      throw new Error('Unable to detect Power BI report context');
+      throw new Error('Unable to detect Power BI report context. Please ensure you are viewing a report.');
     }
 
     // Fetch data from ADOC
@@ -170,21 +250,124 @@ async function handleFetch() {
       throw new Error(dataResponse.error || 'Failed to fetch data');
     }
 
-    // Display the data
-    displayData(dataResponse.data);
-    showView('data');
+    // Determine which case to show based on data
+    const caseType = determineCase(dataResponse.data);
+    displayData(caseType, dataResponse.data);
 
   } catch (error) {
     console.error('Error fetching data:', error);
     showError(error.message || 'Failed to fetch reliability data');
-    showView('fetch');
+    showView('dashboard');
   }
 }
 
 /**
- * Display fetched data
+ * Determine which case to display (1A, 1B, or 2)
  */
-function displayData(data) {
+function determineCase(data) {
+  const { underlyingAssets = [], alerts = [] } = data;
+
+  // Case 2: No data assets available
+  if (!underlyingAssets || underlyingAssets.length === 0) {
+    return 'case-2';
+  }
+
+  // Case 1B: Data found with alerts
+  if (alerts && alerts.length > 0) {
+    return 'case-1b';
+  }
+
+  // Case 1A: Data found, no alerts
+  return 'case-1a';
+}
+
+/**
+ * Display fetched data based on case type
+ */
+function displayData(caseType, data) {
+  switch (caseType) {
+    case 'case-1a':
+      displayCase1A(data);
+      showView('case-1a');
+      break;
+    case 'case-1b':
+      displayCase1B(data);
+      showView('case-1b');
+      break;
+    case 'case-2':
+      displayCase2(data);
+      showView('case-2');
+      break;
+  }
+}
+
+/**
+ * Display Case 1A: Data found, no alerts
+ */
+function displayCase1A(data) {
+  const {
+    reportName = 'Power BI Report',
+    underlyingAssets = [],
+    overallReliability = 0
+  } = data;
+
+  // Calculate overall score
+  const avgScore = underlyingAssets.length > 0
+    ? Math.round(underlyingAssets.reduce((sum, a) => sum + (a.reliabilityScore || 0), 0) / underlyingAssets.length)
+    : overallReliability;
+
+  // Build content HTML
+  const html = `
+    <!-- Score Display -->
+    <div class="score-display">
+      <div class="score-label">Overall Reliability Score</div>
+      <div class="score-value">${avgScore}%</div>
+      <div class="score-subtitle">${reportName}</div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-tab="overview">Overview</button>
+      <button class="tab" data-tab="details">Details</button>
+    </div>
+
+    <!-- Tab: Overview -->
+    <div class="tab-content active" id="tab-overview">
+      <div class="asset-list">
+        ${underlyingAssets.map(asset => `
+          <div class="asset-item">
+            <div class="asset-header">
+              <div class="asset-name">${asset.tableName || asset.name || 'Unknown Asset'}</div>
+              <div class="asset-score ${getScoreClass(asset.reliabilityScore || 0)}">
+                ${asset.reliabilityScore || 0}%
+              </div>
+            </div>
+            <div class="asset-fqn">${asset.fqn || 'No FQN available'}</div>
+            <span class="asset-status status-healthy">
+              <span class="status-dot dot-success"></span>
+              No Issues
+            </span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <!-- Tab: Details -->
+    <div class="tab-content" id="tab-details">
+      <div class="empty-state">
+        <p>All data quality checks are passing. No issues to report.</p>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('case-1a-content').innerHTML = html;
+  setupTabSwitching('case-1a-content');
+}
+
+/**
+ * Display Case 1B: Data found with alerts
+ */
+function displayCase1B(data) {
   const {
     reportName = 'Power BI Report',
     underlyingAssets = [],
@@ -197,26 +380,63 @@ function displayData(data) {
     ? Math.round(underlyingAssets.reduce((sum, a) => sum + (a.reliabilityScore || 0), 0) / underlyingAssets.length)
     : overallReliability;
 
-  // Build data view HTML
+  // Update alert summary
+  const criticalCount = alerts.filter(a => a.severity === 'Critical').length;
+  const highCount = alerts.filter(a => a.severity === 'High').length;
+
+  let summary = '';
+  if (criticalCount > 0) {
+    summary = `${criticalCount} critical issue${criticalCount > 1 ? 's' : ''} detected`;
+  } else if (highCount > 0) {
+    summary = `${highCount} high priority issue${highCount > 1 ? 's' : ''} detected`;
+  } else {
+    summary = `${alerts.length} data quality issue${alerts.length > 1 ? 's' : ''} detected`;
+  }
+
+  document.getElementById('alert-summary').textContent = summary;
+
+  // Build content HTML
   const html = `
-    <div class="data-content">
-      <!-- Score Display -->
-      <div class="score-display">
-        <div class="score-label">Overall Reliability Score</div>
-        <div class="score-value">${avgScore}%</div>
-        <div class="score-subtitle">${reportName}</div>
-      </div>
+    <!-- Score Display -->
+    <div class="score-display">
+      <div class="score-label">Overall Reliability Score</div>
+      <div class="score-value">${avgScore}%</div>
+      <div class="score-subtitle">${reportName}</div>
+    </div>
 
-      <!-- Tabs -->
-      <div class="tabs">
-        <button class="tab active" data-tab="overview">Overview</button>
-        <button class="tab" data-tab="alerts">Alerts (${alerts.length})</button>
-      </div>
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-tab="alerts">Alerts (${alerts.length})</button>
+      <button class="tab" data-tab="assets">Assets (${underlyingAssets.length})</button>
+    </div>
 
-      <!-- Tab: Overview -->
-      <div class="tab-content active" id="tab-overview">
-        <div class="asset-list">
-          ${underlyingAssets.length > 0 ? underlyingAssets.map(asset => `
+    <!-- Tab: Alerts -->
+    <div class="tab-content active" id="tab-alerts">
+      <div class="asset-list">
+        ${alerts.map(alert => `
+          <div class="alert-item severity-${alert.severity.toLowerCase()}">
+            <div class="alert-header">
+              <span class="alert-badge alert-${alert.severity.toLowerCase()}">
+                ${alert.severity}
+              </span>
+              <span class="alert-title">${alert.title || 'Data Quality Issue'}</span>
+            </div>
+            <div class="alert-description">${alert.description || 'No description available'}</div>
+            <div class="alert-meta">
+              <span>${alert.assetName || 'Unknown Asset'}</span>
+              <span class="alert-time">${formatTime(alert.timestamp)}</span>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <!-- Tab: Assets -->
+    <div class="tab-content" id="tab-assets">
+      <div class="asset-list">
+        ${underlyingAssets.map(asset => {
+          const assetAlerts = alerts.filter(a => a.assetName === asset.tableName || a.assetId === asset.id);
+          return `
             <div class="asset-item">
               <div class="asset-header">
                 <div class="asset-name">${asset.tableName || asset.name || 'Unknown Asset'}</div>
@@ -225,36 +445,45 @@ function displayData(data) {
                 </div>
               </div>
               <div class="asset-fqn">${asset.fqn || 'No FQN available'}</div>
-            </div>
-          `).join('') : '<div class="empty-state">No assets found</div>'}
-        </div>
-      </div>
-
-      <!-- Tab: Alerts -->
-      <div class="tab-content" id="tab-alerts">
-        <div class="asset-list">
-          ${alerts.length > 0 ? alerts.map(alert => `
-            <div class="alert-item">
-              <div class="alert-header">
-                <span class="alert-badge alert-${alert.severity.toLowerCase()}">
-                  ${alert.severity}
+              ${assetAlerts.length > 0 ? `
+                <span class="asset-status status-alerts">
+                  <span class="status-dot dot-warning"></span>
+                  ${assetAlerts.length} Alert${assetAlerts.length > 1 ? 's' : ''}
                 </span>
-                <span class="alert-title">${alert.title}</span>
-              </div>
-              <div class="alert-description">${alert.description}</div>
-              <div class="alert-time">${formatTime(alert.timestamp)}</div>
+              ` : `
+                <span class="asset-status status-healthy">
+                  <span class="status-dot dot-success"></span>
+                  No Issues
+                </span>
+              `}
             </div>
-          `).join('') : '<div class="empty-state">No active alerts</div>'}
-        </div>
+          `;
+        }).join('')}
       </div>
     </div>
   `;
 
-  viewData.innerHTML = html;
+  document.getElementById('case-1b-content').innerHTML = html;
+  setupTabSwitching('case-1b-content');
+}
 
-  // Set up tab switching
-  const tabs = viewData.querySelectorAll('.tab');
-  const tabContents = viewData.querySelectorAll('.tab-content');
+/**
+ * Display Case 2: No data available
+ */
+function displayCase2(data) {
+  // Already has static content in HTML, just show the view
+  // You can add dynamic content here if needed
+}
+
+/**
+ * Setup tab switching for a container
+ */
+function setupTabSwitching(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const tabs = container.querySelectorAll('.tab');
+  const tabContents = container.querySelectorAll('.tab-content');
 
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
@@ -281,23 +510,31 @@ function displayData(data) {
 function showView(viewName) {
   // Hide all views
   viewLogin.style.display = 'none';
-  viewFetch.style.display = 'none';
+  viewDashboard.style.display = 'none';
   viewLoading.style.display = 'none';
-  viewData.style.display = 'none';
+  viewCase1A.style.display = 'none';
+  viewCase1B.style.display = 'none';
+  viewCase2.style.display = 'none';
 
   // Show requested view
   switch (viewName) {
     case 'login':
       viewLogin.style.display = 'flex';
       break;
-    case 'fetch':
-      viewFetch.style.display = 'flex';
+    case 'dashboard':
+      viewDashboard.style.display = 'flex';
       break;
     case 'loading':
       viewLoading.style.display = 'flex';
       break;
-    case 'data':
-      viewData.style.display = 'flex';
+    case 'case-1a':
+      viewCase1A.style.display = 'flex';
+      break;
+    case 'case-1b':
+      viewCase1B.style.display = 'flex';
+      break;
+    case 'case-2':
+      viewCase2.style.display = 'flex';
       break;
   }
 
@@ -308,7 +545,6 @@ function showView(viewName) {
  * Show error message
  */
 function showError(message) {
-  // You can enhance this to show error in the UI
   alert(message);
 }
 
