@@ -1,6 +1,6 @@
 /**
  * ADOC Extension Popup - Complete Flow with Dashboard & Cases
- * Handles: Login → Dashboard → Fetch → Display (Case 1A/1B/2)
+ * Handles: Login → Configure → Dashboard → Fetch → Display (Case 1A/1B/2)
  */
 
 // Configuration
@@ -12,6 +12,7 @@ let currentView = 'login';
 let isLoggedIn = false;
 let sessionCheckInterval = null;
 let dashboardData = null;
+let loginTabId = null;
 
 // DOM Elements
 let viewLogin, viewDashboard, viewLoading;
@@ -73,21 +74,74 @@ async function initialize() {
  */
 async function handleLogin() {
   try {
+    // Update button to show we're opening login
+    loginBtn.innerHTML = `
+      <svg class="spinner" width="16" height="16" viewBox="0 0 16 16">
+        <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" fill="none" stroke-dasharray="31.4" stroke-dashoffset="10"/>
+      </svg>
+      Opening Acceldata...
+    `;
+    loginBtn.disabled = true;
+
     // Open Acceldata login page in new tab
     const tab = await chrome.tabs.create({
       url: ACCELDATA_LOGIN_URL,
       active: true
     });
 
-    // Start monitoring for successful login
-    startSessionCheck(tab.id);
+    loginTabId = tab.id;
 
-    console.log('Opened Acceldata login page. Please configure credentials after logging in.');
+    // Wait a moment, then open Options page for credential configuration
+    setTimeout(async () => {
+      // Show message in popup
+      updateLoginMessage();
+
+      // Open Options page in a new tab
+      chrome.runtime.openOptionsPage();
+
+      // Start monitoring for successful configuration
+      startSessionCheck(tab.id);
+    }, 2000);
 
   } catch (error) {
     console.error('Error opening login page:', error);
     showError('Failed to open login page');
+    resetLoginButton();
   }
+}
+
+/**
+ * Update login message to guide user
+ */
+function updateLoginMessage() {
+  const subtitle = document.querySelector('#view-login .subtitle');
+  if (subtitle) {
+    subtitle.innerHTML = `
+      <strong>Next Steps:</strong><br>
+      1. Login to Acceldata in the opened tab<br>
+      2. Enter your API credentials in the Settings tab<br>
+      3. Extension will automatically update
+    `;
+    subtitle.style.textAlign = 'left';
+    subtitle.style.fontSize = '13px';
+    subtitle.style.lineHeight = '1.8';
+  }
+
+  loginBtn.innerHTML = `
+    <svg class="spinner" width="16" height="16" viewBox="0 0 16 16">
+      <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" fill="none" stroke-dasharray="31.4" stroke-dashoffset="10"/>
+    </svg>
+    Waiting for configuration...
+  `;
+  loginBtn.disabled = true;
+}
+
+/**
+ * Reset login button
+ */
+function resetLoginButton() {
+  loginBtn.innerHTML = 'Login to Acceldata';
+  loginBtn.disabled = false;
 }
 
 /**
@@ -98,27 +152,41 @@ function startSessionCheck(tabId) {
     clearInterval(sessionCheckInterval);
   }
 
+  console.log('🔄 Monitoring for credential configuration...');
+
   sessionCheckInterval = setInterval(async () => {
     try {
       // Check if credentials are now available
       const response = await chrome.runtime.sendMessage({ type: 'GET_CREDENTIALS' });
 
       if (response.success && response.data.hasCredentials) {
-        // Login successful!
+        // Configuration successful!
+        console.log('✅ Credentials detected! Loading dashboard...');
+
         clearInterval(sessionCheckInterval);
         sessionCheckInterval = null;
 
         isLoggedIn = true;
 
+        // Reset login button
+        resetLoginButton();
+
         // Load dashboard and show it
         await loadDashboard();
         showView('dashboard');
 
+        // Show success notification
+        showSuccessMessage('Successfully configured! Dashboard ready.');
+
         // Optionally close the login tab
         try {
-          await chrome.tabs.remove(tabId);
+          if (loginTabId) {
+            await chrome.tabs.remove(loginTabId);
+            loginTabId = null;
+          }
         } catch (e) {
           // Tab might already be closed
+          console.log('Login tab already closed');
         }
       }
     } catch (error) {
@@ -126,13 +194,43 @@ function startSessionCheck(tabId) {
     }
   }, SESSION_CHECK_INTERVAL);
 
-  // Stop checking after 5 minutes
+  // Stop checking after 10 minutes
   setTimeout(() => {
     if (sessionCheckInterval) {
+      console.log('⏱️ Session check timeout - stopping monitoring');
       clearInterval(sessionCheckInterval);
       sessionCheckInterval = null;
+      resetLoginButton();
+
+      // Update message
+      const subtitle = document.querySelector('#view-login .subtitle');
+      if (subtitle) {
+        subtitle.innerHTML = `
+          Configuration timeout. Please try again or manually open:<br>
+          <a href="#" id="open-options-link" style="color: #0ea5e9; text-decoration: underline;">Extension Settings</a>
+        `;
+
+        // Add click handler for the link
+        setTimeout(() => {
+          const link = document.getElementById('open-options-link');
+          if (link) {
+            link.addEventListener('click', (e) => {
+              e.preventDefault();
+              chrome.runtime.openOptionsPage();
+            });
+          }
+        }, 100);
+      }
     }
-  }, 300000);
+  }, 600000); // 10 minutes
+}
+
+/**
+ * Show success message
+ */
+function showSuccessMessage(message) {
+  // You can enhance this with a toast notification
+  console.log('✅', message);
 }
 
 /**
