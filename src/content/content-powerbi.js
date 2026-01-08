@@ -13,6 +13,7 @@
   let currentContext = null;
   let enhancedSidebar = null;
   let columnBadgeInjector = null;
+  let toggleButton = null;
 
   /**
    * Extract PowerBI context from URL
@@ -98,6 +99,39 @@
   }
 
   /**
+   * Create floating toggle button
+   */
+  function createToggleButton() {
+    if (toggleButton) {
+      return;
+    }
+
+    toggleButton = document.createElement('button');
+    toggleButton.className = 'adoc-toggle-btn';
+    toggleButton.innerHTML = 'A';
+    toggleButton.title = 'Toggle ADOC Data Reliability Sidebar';
+
+    toggleButton.addEventListener('click', () => {
+      const sidebar = document.getElementById('adoc-sidebar');
+      if (sidebar) {
+        sidebar.classList.toggle('adoc-sidebar-open');
+
+        // Hide toggle button when sidebar is open
+        if (sidebar.classList.contains('adoc-sidebar-open')) {
+          toggleButton.classList.add('hidden');
+        } else {
+          toggleButton.classList.remove('hidden');
+        }
+      }
+    });
+
+    document.body.appendChild(toggleButton);
+
+    // Initially hide since sidebar opens automatically
+    toggleButton.classList.add('hidden');
+  }
+
+  /**
    * Inject ADOC sidebar into PowerBI page
    */
   function injectSidebar() {
@@ -110,6 +144,22 @@
     // Create enhanced sidebar instance
     enhancedSidebar = new EnhancedSidebar();
     enhancedSidebar.create();
+
+    // Create toggle button
+    createToggleButton();
+
+    // Update toggle button visibility when sidebar is closed
+    const sidebar = document.getElementById('adoc-sidebar');
+    const closeBtn = document.getElementById('adoc-close-btn');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        setTimeout(() => {
+          if (toggleButton && !sidebar.classList.contains('adoc-sidebar-open')) {
+            toggleButton.classList.remove('hidden');
+          }
+        }, 350);
+      });
+    }
 
     sidebarInjected = true;
 
@@ -298,15 +348,30 @@
    * Initialize extension when page is ready
    */
   function initialize() {
-    // Wait for PowerBI to load
-    setTimeout(() => {
-      const context = extractPowerBIContext();
+    console.log('ADOC Extension: Initializing PowerBI integration');
 
-      if (context) {
-        injectSidebar();
-        monitorPageChanges();
-      }
-    }, 2000);
+    // Try to extract context immediately
+    const context = extractPowerBIContext();
+
+    if (context) {
+      console.log('ADOC Extension: PowerBI context detected immediately', context);
+      injectSidebar();
+      monitorPageChanges();
+    } else {
+      // If no context yet, wait and retry
+      console.log('ADOC Extension: Waiting for PowerBI to load...');
+      setTimeout(() => {
+        const retryContext = extractPowerBIContext();
+
+        if (retryContext) {
+          console.log('ADOC Extension: PowerBI context detected on retry', retryContext);
+          injectSidebar();
+          monitorPageChanges();
+        } else {
+          console.log('ADOC Extension: No PowerBI report context found');
+        }
+      }, 1500);
+    }
   }
 
   // Start initialization when DOM is ready
