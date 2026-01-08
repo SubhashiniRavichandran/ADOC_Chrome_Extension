@@ -69,10 +69,11 @@ class EnhancedSidebar {
         // Set up event listeners
         this.setupEventListeners();
 
-        // Open sidebar by default
+        // Open sidebar automatically after a brief moment
         setTimeout(() => {
             sidebar.classList.add('adoc-sidebar-open');
-        }, 500);
+            console.log('ADOC Extension: Sidebar opened automatically');
+        }, 300);
 
         return sidebar;
     }

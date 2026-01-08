@@ -7,11 +7,11 @@
 .adoc-sidebar {
   position: fixed;
   top: 0;
-  right: -400px;
-  width: 400px;
+  right: -360px;
+  width: 360px;
   height: 100vh;
   background: #ffffff;
-  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
   z-index: 999999;
   transition: right 0.3s ease;
   display: flex;
@@ -740,6 +740,38 @@
   background: #94a3b8;
 }
 
+/* Floating Toggle Button */
+.adoc-toggle-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999998;
+  transition: all 0.3s ease;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.adoc-toggle-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.6);
+}
+
+.adoc-toggle-btn.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* Animations */
 @keyframes adoc-fade-in {
   from {
@@ -752,8 +784,21 @@
   }
 }
 
+@keyframes adoc-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
 .adoc-alert-card,
 .adoc-asset-item,
 .adoc-column-item {
   animation: adoc-fade-in 0.3s ease;
+}
+
+.adoc-toggle-btn {
+  animation: adoc-pulse 2s ease-in-out infinite;
 }

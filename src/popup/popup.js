@@ -59,9 +59,17 @@ async function initialize() {
       await loadDashboard();
       showView('dashboard');
     } else {
-      // No credentials - show login view
-      isLoggedIn = false;
-      showView('login');
+      // No credentials - check if we're waiting for login
+      const storage = await chrome.storage.local.get(['waitingForLogin']);
+      if (storage.waitingForLogin) {
+        // Still waiting for credentials - start monitoring
+        updateLoginMessage();
+        startSessionCheck(null);
+      } else {
+        // No credentials - show login view
+        isLoggedIn = false;
+        showView('login');
+      }
     }
   } catch (error) {
     console.error('Error initializing:', error);
@@ -83,6 +91,9 @@ async function handleLogin() {
     `;
     loginBtn.disabled = true;
 
+    // Set flag to indicate we're waiting for login
+    await chrome.storage.local.set({ waitingForLogin: true });
+
     // Open Acceldata login page in new tab
     const tab = await chrome.tabs.create({
       url: ACCELDATA_LOGIN_URL,
@@ -91,22 +102,18 @@ async function handleLogin() {
 
     loginTabId = tab.id;
 
-    // Wait a moment, then open Options page for credential configuration
+    // Update message to show waiting for login
     setTimeout(async () => {
-      // Show message in popup
       updateLoginMessage();
-
-      // Open Options page in a new tab
-      chrome.runtime.openOptionsPage();
-
-      // Start monitoring for successful configuration
+      // Start monitoring the Acceldata tab for successful login
       startSessionCheck(tab.id);
-    }, 2000);
+    }, 1000);
 
   } catch (error) {
     console.error('Error opening login page:', error);
     showError('Failed to open login page');
     resetLoginButton();
+    await chrome.storage.local.set({ waitingForLogin: false });
   }
 }
 
@@ -117,21 +124,23 @@ function updateLoginMessage() {
   const subtitle = document.querySelector('#view-login .subtitle');
   if (subtitle) {
     subtitle.innerHTML = `
-      <strong>Next Steps:</strong><br>
-      1. Login to Acceldata in the opened tab<br>
-      2. Enter your API credentials in the Settings tab<br>
-      3. Extension will automatically update
+      <strong>Please complete login in the opened tab</strong><br>
+      <br>
+      Once you successfully log in to Acceldata,<br>
+      this extension will automatically detect your<br>
+      session and show your dashboard.
     `;
-    subtitle.style.textAlign = 'left';
+    subtitle.style.textAlign = 'center';
     subtitle.style.fontSize = '13px';
     subtitle.style.lineHeight = '1.8';
+    subtitle.style.color = '#64748b';
   }
 
   loginBtn.innerHTML = `
     <svg class="spinner" width="16" height="16" viewBox="0 0 16 16">
       <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" fill="none" stroke-dasharray="31.4" stroke-dashoffset="10"/>
     </svg>
-    Waiting for configuration...
+    Waiting for login...
   `;
   loginBtn.disabled = true;
 }
@@ -152,63 +161,86 @@ function startSessionCheck(tabId) {
     clearInterval(sessionCheckInterval);
   }
 
-  console.log('🔄 Monitoring for credential configuration...');
+  console.log('🔄 Monitoring Acceldata tab for successful login...');
+
+  let checkCount = 0;
 
   sessionCheckInterval = setInterval(async () => {
     try {
-      // Check if credentials are now available
-      const response = await chrome.runtime.sendMessage({ type: 'GET_CREDENTIALS' });
+      checkCount++;
 
-      if (response.success && response.data.hasCredentials) {
-        // Configuration successful!
-        console.log('✅ Credentials detected! Loading dashboard...');
-
-        clearInterval(sessionCheckInterval);
-        sessionCheckInterval = null;
-
-        isLoggedIn = true;
-
-        // Reset login button
-        resetLoginButton();
-
-        // Load dashboard and show it
-        await loadDashboard();
-        showView('dashboard');
-
-        // Show success notification
-        showSuccessMessage('Successfully configured! Dashboard ready.');
-
-        // Optionally close the login tab
-        try {
-          if (loginTabId) {
-            await chrome.tabs.remove(loginTabId);
-            loginTabId = null;
-          }
-        } catch (e) {
-          // Tab might already be closed
-          console.log('Login tab already closed');
-        }
+      // First, check if credentials were manually saved in Options (fallback)
+      const credResponse = await chrome.runtime.sendMessage({ type: 'GET_CREDENTIALS' });
+      if (credResponse.success && credResponse.data.hasCredentials) {
+        await handleSuccessfulLogin();
+        return;
       }
+
+      // Check if the tab still exists
+      if (!tabId) {
+        return;
+      }
+
+      try {
+        const tab = await chrome.tabs.get(tabId);
+
+        if (!tab) {
+          console.log('⚠️ Login tab was closed');
+          return;
+        }
+
+        // Check if URL changed from login page (indicates successful login)
+        const currentUrl = tab.url || '';
+
+        // If user navigated away from login page, likely logged in successfully
+        if (currentUrl && !currentUrl.includes('login') && currentUrl.includes('acceldata')) {
+          console.log('✅ Login detected! URL changed to:', currentUrl);
+
+          // Try to get credentials from storage or prompt user
+          const hasStoredCreds = await checkOrPromptForCredentials();
+
+          if (hasStoredCreds) {
+            await handleSuccessfulLogin();
+          }
+        }
+
+        // Every 10 checks (20 seconds), remind user
+        if (checkCount % 10 === 0) {
+          console.log(`Still waiting for login... (${checkCount * 2} seconds elapsed)`);
+        }
+
+      } catch (tabError) {
+        // Tab might have been closed
+        console.log('Login tab no longer accessible:', tabError.message);
+      }
+
     } catch (error) {
       console.error('Error checking session:', error);
     }
   }, SESSION_CHECK_INTERVAL);
 
-  // Stop checking after 10 minutes
-  setTimeout(() => {
+  // Stop checking after 5 minutes
+  setTimeout(async () => {
     if (sessionCheckInterval) {
       console.log('⏱️ Session check timeout - stopping monitoring');
       clearInterval(sessionCheckInterval);
       sessionCheckInterval = null;
+
+      // Clear waiting flag
+      await chrome.storage.local.set({ waitingForLogin: false });
+
       resetLoginButton();
 
       // Update message
       const subtitle = document.querySelector('#view-login .subtitle');
       if (subtitle) {
         subtitle.innerHTML = `
-          Configuration timeout. Please try again or manually open:<br>
-          <a href="#" id="open-options-link" style="color: #0ea5e9; text-decoration: underline;">Extension Settings</a>
+          <strong>Login timeout</strong><br>
+          <br>
+          Please try again or manually configure credentials:<br>
+          <a href="#" id="open-options-link" style="color: #0ea5e9; text-decoration: underline;">Open Extension Settings</a>
         `;
+        subtitle.style.textAlign = 'center';
 
         // Add click handler for the link
         setTimeout(() => {
@@ -222,7 +254,74 @@ function startSessionCheck(tabId) {
         }, 100);
       }
     }
-  }, 600000); // 10 minutes
+  }, 300000); // 5 minutes
+}
+
+/**
+ * Check if credentials exist or prompt user to configure them
+ */
+async function checkOrPromptForCredentials() {
+  const response = await chrome.runtime.sendMessage({ type: 'GET_CREDENTIALS' });
+
+  if (response.success && response.data.hasCredentials) {
+    return true;
+  }
+
+  // No credentials found, open Options page
+  console.log('No credentials found, opening Options page...');
+
+  // Update UI to show we need credentials
+  const subtitle = document.querySelector('#view-login .subtitle');
+  if (subtitle) {
+    subtitle.innerHTML = `
+      <strong>Login successful!</strong><br>
+      <br>
+      Please configure your API credentials<br>
+      in the Settings page that just opened.
+    `;
+    subtitle.style.textAlign = 'center';
+  }
+
+  // Open Options page
+  chrome.runtime.openOptionsPage();
+
+  return false;
+}
+
+/**
+ * Handle successful login - transition to dashboard
+ */
+async function handleSuccessfulLogin() {
+  console.log('✅ Credentials detected! Loading dashboard...');
+
+  clearInterval(sessionCheckInterval);
+  sessionCheckInterval = null;
+
+  // Clear waiting flag
+  await chrome.storage.local.set({ waitingForLogin: false });
+
+  isLoggedIn = true;
+
+  // Reset login button
+  resetLoginButton();
+
+  // Load dashboard and show it
+  await loadDashboard();
+  showView('dashboard');
+
+  // Show success notification
+  showSuccessMessage('Successfully logged in! Dashboard ready.');
+
+  // Close the login tab
+  try {
+    if (loginTabId) {
+      await chrome.tabs.remove(loginTabId);
+      loginTabId = null;
+    }
+  } catch (e) {
+    // Tab might already be closed
+    console.log('Login tab already closed');
+  }
 }
 
 /**
@@ -671,6 +770,35 @@ function formatTime(timestamp) {
   if (diff < 1440) return `${Math.floor(diff / 60)}h ago`;
   return date.toLocaleDateString();
 }
+
+// Listen for storage changes (credentials saved in options page)
+chrome.storage.onChanged.addListener(async (changes, namespace) => {
+  if (namespace === 'local') {
+    // Check if credentials were just saved
+    const credResponse = await chrome.runtime.sendMessage({ type: 'GET_CREDENTIALS' });
+    if (credResponse.success && credResponse.data.hasCredentials && !isLoggedIn) {
+      console.log('🔔 Credentials detected via storage change!');
+
+      // Clear monitoring interval if running
+      if (sessionCheckInterval) {
+        clearInterval(sessionCheckInterval);
+        sessionCheckInterval = null;
+      }
+
+      // Clear waiting flag
+      await chrome.storage.local.set({ waitingForLogin: false });
+
+      isLoggedIn = true;
+
+      // Load dashboard and show it
+      await loadDashboard();
+      showView('dashboard');
+
+      // Show success notification
+      showSuccessMessage('Successfully configured! Dashboard ready.');
+    }
+  }
+});
 
 // Cleanup on popup close
 window.addEventListener('unload', () => {
