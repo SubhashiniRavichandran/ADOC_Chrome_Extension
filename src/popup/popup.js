@@ -59,9 +59,17 @@ async function initialize() {
       await loadDashboard();
       showView('dashboard');
     } else {
-      // No credentials - show login view
-      isLoggedIn = false;
-      showView('login');
+      // No credentials - check if we're waiting for login
+      const storage = await chrome.storage.local.get(['waitingForLogin']);
+      if (storage.waitingForLogin) {
+        // Still waiting for credentials - start monitoring
+        updateLoginMessage();
+        startSessionCheck(null);
+      } else {
+        // No credentials - show login view
+        isLoggedIn = false;
+        showView('login');
+      }
     }
   } catch (error) {
     console.error('Error initializing:', error);
@@ -82,6 +90,9 @@ async function handleLogin() {
       Opening Acceldata...
     `;
     loginBtn.disabled = true;
+
+    // Set flag to indicate we're waiting for login
+    await chrome.storage.local.set({ waitingForLogin: true });
 
     // Open Acceldata login page in new tab
     const tab = await chrome.tabs.create({
@@ -107,6 +118,7 @@ async function handleLogin() {
     console.error('Error opening login page:', error);
     showError('Failed to open login page');
     resetLoginButton();
+    await chrome.storage.local.set({ waitingForLogin: false });
   }
 }
 
@@ -166,6 +178,9 @@ function startSessionCheck(tabId) {
         clearInterval(sessionCheckInterval);
         sessionCheckInterval = null;
 
+        // Clear waiting flag
+        await chrome.storage.local.set({ waitingForLogin: false });
+
         isLoggedIn = true;
 
         // Reset login button
@@ -195,11 +210,15 @@ function startSessionCheck(tabId) {
   }, SESSION_CHECK_INTERVAL);
 
   // Stop checking after 10 minutes
-  setTimeout(() => {
+  setTimeout(async () => {
     if (sessionCheckInterval) {
       console.log('⏱️ Session check timeout - stopping monitoring');
       clearInterval(sessionCheckInterval);
       sessionCheckInterval = null;
+
+      // Clear waiting flag
+      await chrome.storage.local.set({ waitingForLogin: false });
+
       resetLoginButton();
 
       // Update message
@@ -671,6 +690,35 @@ function formatTime(timestamp) {
   if (diff < 1440) return `${Math.floor(diff / 60)}h ago`;
   return date.toLocaleDateString();
 }
+
+// Listen for storage changes (credentials saved in options page)
+chrome.storage.onChanged.addListener(async (changes, namespace) => {
+  if (namespace === 'local') {
+    // Check if credentials were just saved
+    const credResponse = await chrome.runtime.sendMessage({ type: 'GET_CREDENTIALS' });
+    if (credResponse.success && credResponse.data.hasCredentials && !isLoggedIn) {
+      console.log('🔔 Credentials detected via storage change!');
+
+      // Clear monitoring interval if running
+      if (sessionCheckInterval) {
+        clearInterval(sessionCheckInterval);
+        sessionCheckInterval = null;
+      }
+
+      // Clear waiting flag
+      await chrome.storage.local.set({ waitingForLogin: false });
+
+      isLoggedIn = true;
+
+      // Load dashboard and show it
+      await loadDashboard();
+      showView('dashboard');
+
+      // Show success notification
+      showSuccessMessage('Successfully configured! Dashboard ready.');
+    }
+  }
+});
 
 // Cleanup on popup close
 window.addEventListener('unload', () => {
